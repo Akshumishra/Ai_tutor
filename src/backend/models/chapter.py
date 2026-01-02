@@ -8,10 +8,15 @@ from src.backend.models.base import BaseModel
 class Chapter(BaseModel):
     __tablename__ = "chapters"
 
-    curriculum_id = Column(Integer, ForeignKey("curriculums.id", ondelete="CASCADE"))
-    sequence_order = Column(Integer, nullable=False)
-    title = Column(String, nullable=False)
+    topic_id = Column(
+        Integer, ForeignKey("topics.id", ondelete="CASCADE"), nullable=False
+    )
+    title = Column(String(255), nullable=False)
+    sequence = Column(Integer, nullable=False)
     status = Column(Enum(Status), nullable=False)
-    content = Column(Text, nullable=False)
+    outline = Column(Text, nullable=False)
 
-    curriculum = relationship("Curriculum", back_populates="chapters")
+    topic = relationship("Topic", back_populates="chapters")
+    plans = relationship(
+        "ChapterPlan", back_populates="chapter", cascade="all, delete-orphan"
+    )

@@ -7,8 +7,6 @@ from src.backend.models.base import BaseModel
 class User(BaseModel):
     __tablename__ = "users"
 
-    name = Column(String, nullable=False)
+    name = Column(String(100), nullable=False)
 
-    curriculums = relationship(
-        "Curriculum", back_populates="user", cascade="all, delete-orphan"
-    )
+    topics = relationship("Topic", back_populates="user", cascade="all, delete-orphan")
