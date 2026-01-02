@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, JSON, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 
 from src.backend.models.base import BaseModel
