@@ -5,4 +5,4 @@ load_dotenv()
 
 
 class Config:
-    DB_URL = os.getenv("DB_URL")
+    DATABASE_URL = os.getenv("DATABASE_URL")
