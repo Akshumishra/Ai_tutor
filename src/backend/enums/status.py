@@ -2,6 +2,6 @@ from enum import Enum
 
 
 class Status(str, Enum):
-    pending = "pending"
-    in_process = "in_process"
-    completed = "completed"
+    PENDING = "pending"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "completed"
