@@ -54,24 +54,25 @@ class CurriculumAgent:
             tool_choice="auto",
         )
     
-    def format_chat_history(self, input: list) -> list:
-        chat_history = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {
+    def format_chat_history(self, chat_history: list) -> list:
+        if not chat_history:
+            system_msg = {
+                "role": "system",
+                "content": SYSTEM_PROMPT
+            }
+            chat_history.append(system_msg)
+
+            user_msg = {
                 "role": "user",
-                "content": "Hello, I want to start a new learning journey.",
-            },
-        ]
-
-        if isinstance(input, list):
-            chat_history.extend(input)
-        else:
-            chat_history.append(input)
-
+                "content": "Hi. I want to start creating a new learning curriculum."
+            }
+            chat_history.append(user_msg)
         return chat_history
+
 
     def invoke(self, chat_history: list):
         chat_history = self.format_chat_history(chat_history)
+        tool_call=[]
         step = 0
         tool_call=[]
 
