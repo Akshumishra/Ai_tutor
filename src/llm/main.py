@@ -1,3 +1,5 @@
+import json
+
 from src.llm.curriculum_agent.agent import CurriculumAgent
 from src.llm.teacher_agent.agent import TeacherAgent
 from src.llm.teacher_agent.constant import TeacherConstants
@@ -66,8 +68,8 @@ def run_teacher_agent(topic_id, chat_history):
         get_user_curriculum, GetUserCurriculumArgs, "Get curriculum plan by topic id."
     )
 
-    assistant_text, message = agent.invoke(chat_history)
-    return assistant_text, message
+    assistant_text, tool_calls = agent.invoke(chat_history)
+    return assistant_text, tool_calls
 
 
 def run_planner(topic_id: str):
