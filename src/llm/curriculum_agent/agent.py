@@ -79,7 +79,6 @@ class CurriculumAgent:
         while step < self.max_iteration:
             step += 1
             response = self._call_llm(chat_history)
-            print(f"{step}")
             assistant_text = ""
 
             for item in response.output:

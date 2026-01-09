@@ -5,7 +5,6 @@ from src.llm.utils.helper_function import load_chat_history, append_response_jso
 
 def run_curriculum(user_id: str, topic_id: str):
     chat_history = load_chat_history(user_id, topic_id)
-
     response, tool_call = run_curriculum_agent(
         user_id=user_id,
         topic_id=topic_id,
@@ -42,8 +41,8 @@ def run_curriculum(user_id: str, topic_id: str):
 
 def main():
     USER_ID = "0249cfc3-cce2-466e-9413-dc6db145ac5c"
-    # TOPIC_ID = "7fd25465-488f-49ff-b009-8ea87514b3ba"
-    TOPIC_ID = str(uuid4())  # generate new topic_id when needed
+    TOPIC_ID = "7fd25465-488f-49ff-b009-8ea87514b3ba"
+    # TOPIC_ID = str(uuid4())  # generate new topic_id when needed
     run_curriculum(USER_ID, TOPIC_ID)
 
 
