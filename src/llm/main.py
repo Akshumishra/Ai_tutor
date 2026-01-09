@@ -49,7 +49,8 @@ def run_curriculum_agent(user_id: str, topic_id: str, chat_history: list):
 
 
 
-def run_teacher_agent(topic_id):
+
+def run_teacher_agent(topic_id, chat_history):
     agent = TeacherAgent(
         topic_id=topic_id,
         model=TeacherConstants.MODEL_NAME,
@@ -65,15 +66,8 @@ def run_teacher_agent(topic_id):
         get_user_curriculum, GetUserCurriculumArgs, "Get curriculum plan by topic id."
     )
 
-    while True:
-        assistant_text = agent.invoke()
-
-        print("\n[Teacher]", assistant_text)
-
-        agent.add_message("assistant", assistant_text)
-        user_input = input("\n[Your Response]: ")
-
-        agent.add_message("user", user_input)
+    assistant_text, message = agent.invoke(chat_history)
+    return assistant_text, message
 
 
 def run_planner(topic_id: str):
