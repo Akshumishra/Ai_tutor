@@ -207,4 +207,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+<<<<<<< HEAD
 **/chat_history/
+=======
+chat_history/
+>>>>>>> 57a859d (fix: move the chat_history folder to root)
