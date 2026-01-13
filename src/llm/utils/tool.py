@@ -1,4 +1,4 @@
-class ToolRegistry:
+class Tool:
     def __init__(self, func, args_schema, description: str = None):
         self.func = func
         self.name = func.__name__

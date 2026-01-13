@@ -180,3 +180,5 @@ AGENT TERMINATION (MANDATORY)
   - Do NOT call any tools
   - End the conversation immediately
 """
+
+USER_PROMPT = "Hello, I want to start a new learning journey."
