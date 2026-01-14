@@ -11,6 +11,8 @@ class CurriculumAgent:
     def __init__(
         self,
         user_id: str,
+        topic_id: str,
+        model: str = CurriculumConstants.DEFAULT_MODEL,
         temperature: float = CurriculumConstants.DEFAULT_TEMPERATURE,
         max_iteration: int = CurriculumConstants.DEFAULT_MAX_ITERATION,
     ):
