@@ -1,53 +1,52 @@
-from deep_research.state import ResearchState
-from deep_research.prompt import SYNTHESIS_SYSTEM_PROMPT
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage, HumanMessage
-import json
+import logging
+from src.llm.deep_research.state import ResearchState
+from src.llm.deep_research.prompt import SYNTHESIS_SYSTEM_PROMPT, SYNTHESIS_USER_PROMPT
+from src.llm.deep_research.constant import DeepResearchConstants
+from src.llm.agent_core.agent import Agent
 
-llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+logger = logging.getLogger(__name__)
 
 
-def synthesizer_agent(state: ResearchState) -> ResearchState:
-    sources = state["sources"]
-    subtopics = state["subtopics"]
-    scratchpad = state.get("scratchpad", "")
+class Synthesizer(Agent):
+    def __init__(
+            self,
+            state=ResearchState,
+            model=DeepResearchConstants.DEFAULT_MODEL,
+            temperature=DeepResearchConstants.DEFAULT_TEMPERATURE,
+            max_iteration=DeepResearchConstants.DEFAULT_MAX_RETRIES,
+    ):
+        self.state=state
+        logger.info(
+            "Initializing Synthesizer Agent"
+        )
 
-    user_prompt = f"""
-Research question:
-{state['query']}
+        super().__init__(
+            system_prompt=SYNTHESIS_SYSTEM_PROMPT,
+            user_prompt=SYNTHESIS_USER_PROMPT.format(
+                query=state["query"],
+                subtopics=state["subtopics"],
+                critique=state.get("critique",[]),
+                missing=state.get("missing",[]),
+                scratchpad=state["scratchpad"],
+                sources=state["sources"],
+            ),
+            model=model,
+            temperature=temperature,
+            max_iteration=max_iteration,
+        )
+        logger.info("Synthesizer Agent initialized successfully")
 
-Planned subtopics:
-{subtopics}
-
-Evaluator critique:
-{state.get("critique", "")}
-
-Missing elements identified by evaluator:
-{state.get("missing", [])}
-
-Researcher scratchpad (notes and reasoning — NOT for direct copying):
-{scratchpad}
-
-Collected verified evidence:
-{json.dumps(sources, indent=2)}
-
-Instructions:
-- Use the scratchpad to understand context and intent
-- Use the evidence as the ONLY factual source
-- Produce a final, polished research report
-- Explicitly address missing elements
-"""
-
-    response = llm.invoke(
-        [
-            SystemMessage(content=SYNTHESIS_SYSTEM_PROMPT),
-            HumanMessage(content=user_prompt),
-        ],
-        config={"run_name": "Synthesizer → Final Report"},
+def synthesizer_node(state: ResearchState) -> ResearchState:
+    synthesizer_agent=Synthesizer(
+        state=state,
+        model=DeepResearchConstants.MODEL,
+        temperature=DeepResearchConstants.TEMPERATURE,
+        max_iteration=DeepResearchConstants.MAX_RETRIES,
     )
+    logger.info("Synthesizer Agent object created sucessfully")
+    chat_history = []
+    ai_response, _ = synthesizer_agent.invoke(chat_history)
+    logger.info("Synthesizer Agent invoke completed sucessfully")
+    state["draft"] = ai_response
+    return state
 
-    return {
-        **state,
-        "draft": response.content,
-        "final": response.content,  # optional alias if you want a clear terminal field
-    }

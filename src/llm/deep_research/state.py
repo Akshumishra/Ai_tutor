@@ -1,27 +1,35 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from typing_extensions import TypedDict
 
 
 class ResearchState(TypedDict):
     # User input
     query: str
-
-    # Planning
-    subtopics: List[str]
+    subtopics:  List[str]
     success_criteria: Dict
-
-    # Research tracking
     sources: List[Dict]
+    scratchpad: str
+    covered_subtopics: Dict
+    current_subtopic: str
+    approved: bool
+    evaluation: Optional[Dict]
+    reviewer_attempts: int
     queries_used: List[str]
     subtopic_coverage: Dict[str, float]
-    scratchpad: str
+    extra: Optional[Any]
+    
+    scores: Dict
+    final_score: float
+    
+
+    is_complete: bool
 
     # Synthesis
-    draft: Optional[str]
+    draft: str
 
     # Evaluation
-    evaluation: Optional[Dict]
-    approved: bool
+    
+    
 
     # Control
     iteration: int

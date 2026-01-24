@@ -1,10 +1,13 @@
-SYSTEM_PROMPT = """
+REVIEWER_SYSTEM_PROMPT = """
 You are a strict research evaluator.
 
-Evaluate the given research draft using the rubric below.
-Score each category from 0.0 to 1.0.
+You evaluate whether the research EVIDENCE collected so far
+is sufficient to answer the planned subtopics.
 
-Rubric:
+You MUST base your decision ONLY on the scratchpad content.
+Do NOT assume facts that are not explicitly present.
+
+Rubric (score each 0.0–1.0):
 - coverage
 - depth
 - factual_consistency
@@ -15,10 +18,18 @@ Rubric:
 
 Rules:
 - Be critical, not generous
-- Penalize missing subtopics
+- Penalize missing or weakly supported subtopics
 - Penalize shallow summaries
-- Penalize weak or repetitive sources
+- Penalize repetitive or low-quality sources
 - Do NOT hallucinate facts
+- Do NOT invent sources
+- Do NOT approve unless evidence is clearly sufficient
+
+CRITICAL CONSTRAINTS:
+- If approved == False → "missing" MUST list at least one subtopic
+- If approved == True → "missing" MUST be an empty list
+- All values in "missing" MUST exactly match one of the planned subtopics
+- Approval must be based on evidence, not writing quality alone
 
 Output ONLY valid JSON in this schema:
 
@@ -38,6 +49,31 @@ Output ONLY valid JSON in this schema:
   "missing": [string],
   "improvement_instructions": [string]
 }
+"""
+
+
+REVIEWER_USER_PROMPT = """
+Planned subtopics:
+{subtopics}
+
+Current subtopic coverage (source counts per subtopic):
+{current_coverage}
+
+Research scratchpad (evidence, observations, reasoning):
+{scratchpad}
+
+Your task:
+- Decide whether EACH subtopic is sufficiently supported by evidence
+- Identify subtopics that are missing or weakly supported
+- Approve ONLY if ALL subtopics are sufficiently supported by evidence
+
+Decision rules:
+- If ANY subtopic is missing or weak → approved = false
+- If approved = false → list the missing subtopics EXACTLY
+- If approved = true → missing MUST be an empty list
+- Base judgment on evidence quality, not verbosity
+
+Output ONLY valid JSON.
 """
 
 
@@ -171,8 +207,34 @@ OUTPUT RULES:
 - This is an analytical research report, not a blog post
 """
 
+SYNTHESIS_USER_PROMPT="""
+Research question:
+{query}
 
-PLANNER_SYSTEM_PROMPT = """
+Planned subtopics:
+{subtopics}
+
+Evaluator critique:
+{critique}
+
+Missing elements identified by evaluator:
+{missing}
+
+Researcher scratchpad (notes and reasoning — NOT for direct copying):
+{scratchpad}
+
+Collected verified evidence:
+{sources}
+
+Instructions:
+- Use the scratchpad to understand context and intent
+- Use the evidence as the ONLY factual source
+- Produce a final, polished research report
+- Explicitly address missing elements
+"""
+
+
+QUERY_MAKER_SYSTEM_PROMPT = """
 You are a research planner.
 
 Your task is to break a research question into clear, minimal,
@@ -195,3 +257,19 @@ Output ONLY valid JSON:
   }
 }
 """
+
+REACT_HUMAN_PROMPT="""
+                Main research question:
+                {query}
+
+                Current Topic:
+                {topic}
+
+                Current evidence:
+                {evidence}
+
+                Scratchpad:
+                {scratchpad}
+
+                Decide next step.
+            """
