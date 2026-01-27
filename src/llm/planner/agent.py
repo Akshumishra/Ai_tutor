@@ -10,25 +10,35 @@ logger = logging.getLogger(__name__)
 class PlannerAgent(Agent):
     def __init__(
         self,
-        state: ResearchState,
+        draft: str,
+        sources:list,
+        topic_title:str,
+        user_summary:str,
+        all_chapters:list,
+        current_chapter_title:str,
+        outline_title : str,
         model: str = PlannerConstants.DEFAULT_MODEL,
         temperature: float = PlannerConstants.DEFAULT_TEMPERATURE,
     ):
-        if not isinstance(state, dict):
-            raise TypeError(
-                f"PlannerAgent expected ResearchState dict, got {type(state)}"
-            )
+        # if not isinstance(state, dict):
+        #     raise TypeError(
+        #         f"PlannerAgent expected ResearchState dict, got {type(state)}"
+        #     )
 
-        logger.info(
-            "Initializing PlannerAgent | query=%s",
-            state.get("query"),
-        )
+        # logger.info(
+        #     "Initializing PlannerAgent | query=%s",
+        #     state.get("query"),
+        # )
         super().__init__(
             system_prompt=SYSTEM_PROMPT,
             user_prompt=USER_PROMPT.format(
-                query=state["query"],
-                extra=state.get("extra", "None provided"),
-                researcher_scratchpad = state.get("scratchpad") or "No sources were required.",
+                topic_title= topic_title,
+                user_summary = user_summary,
+                all_chapters= all_chapters,
+                draft=draft,
+                sources=sources,
+                current_chapter_title=current_chapter_title,
+                chapter_outline=outline_title
             ),
             model=model,
             temperature=temperature,

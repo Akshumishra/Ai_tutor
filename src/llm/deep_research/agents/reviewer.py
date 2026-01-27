@@ -22,9 +22,10 @@ class Reviewer(Agent):
         super().__init__(
             system_prompt=REVIEWER_SYSTEM_PROMPT,
             user_prompt=REVIEWER_USER_PROMPT.format(
-                subtopics=state["subtopics"],
+                current_subtopic=state["current_subtopic"],
                 current_coverage=state.get("covered_subtopics", {}),
                 scratchpad=state.get("scratchpad", ""),
+                previously_sufficient=state.get("previously_sufficient", []),
             ),
             model=model,
             temperature=temperature,
@@ -50,35 +51,41 @@ def reviewer_node(state: ResearchState) -> ResearchState:
         logger.exception("Reviewer returned invalid JSON")
         state["approved"] = False
         return state
+    # print("==== SCRATCHPAD ====")
+    # print(state["scratchpad"])
 
-    # ✅ DEBUG prints from data (NOT state)
-    print("Reviewer approved:", data["approved"])
-    print("Reviewer scores:", data["scores"])
-    print("Reviewer missing:", data.get("missing", []))
-    print("Reviewer final score:", data["final_score"])
-
-    if( data["final_score"] > 0.85):
-        state["approved"]=True
-
-    # ✅ Write to state
-    state["scores"] = data["scores"]
-    state["final_score"] = data["final_score"]
-    # state["approved"] = data["approved"]
-    state["critique"] = data["critique"]
-    state["missing"] = data.get("missing", [])
-    state["improvement_instructions"] = data["improvement_instructions"]
-
-    # 🔥 critical fix (you did this correctly)
-    if not state["approved"] and state["missing"]:
-        state["current_subtopic"] = state["missing"][0]
-
-    # 🛑 safety guard
-    state["reviewer_attempts"] = state.get("reviewer_attempts", 0) + 1
-    if state["reviewer_attempts"] >= 3:
+    final_score = (data["scores"]["coverage"]+data["scores"]["depth"]+data["scores"]["source_quality"]+data["scores"]["clarity"])/4
+    if final_score > 0.70:
         state["approved"] = True
+
+    logger.info("Reviewer approved: %s", state["approved"])
+    logger.info("Reviewer scores: %s", data["scores"])
+    logger.info("Reviewer missing feedback: %s", data.get("missing"))
+    logger.info("Reviewer final score: %s", final_score)
+
+    state["scores"] = data["scores"]
+    state["final_score"] = final_score
+    state["critique"] = data["critique"]
+
+    state["missing"] = data.get("missing")
+
+    state["improvement_instructions"] = data.get("improvement_instructions")
+
+    state["reviewer_attempts"] = state.get("reviewer_attempts", 0) + 1
+    if state["reviewer_attempts"] >= DeepResearchConstants.MAX_RETRIES:
+        logger.warning("Reviewer max attempts reached; forcing approval")
+        state["approved"] = True
+        state["missing"] = None
+        state["improvement_instructions"] = None
+
+    if state["approved"]:
+        state["missing"] = None
+        state["improvement_instructions"] = None
 
     return state
 
+def route_after_reviewer(state: ResearchState) -> str:
+    if not state.get("approved"):
+        return "researcher"      # retry same subtopic
+    return "set_next_query"      # move forward
 
-def route_after_reviewer(state: ResearchState):
-    return "synthesizer" if state.get("approved") else "researcher"

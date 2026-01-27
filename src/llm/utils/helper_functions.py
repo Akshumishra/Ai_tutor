@@ -31,3 +31,16 @@ def extract(tool_results):
         result.append(tool["input"])
         result.append(tool["output"])
     return result
+
+def parse_outline(outline_text: str) -> list[str]:
+    return [
+        line.strip("- ").strip()
+        for line in outline_text.split("\n")
+        if line.strip()
+    ]
+
+def extract_json(text: str) -> str:
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("```", 2)[1]
+    return text.strip()

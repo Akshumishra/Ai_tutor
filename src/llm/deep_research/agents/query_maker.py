@@ -2,8 +2,9 @@ import logging
 import json
 
 from src.llm.deep_research.state import ResearchState
-from src.llm.deep_research.prompt import QUERY_MAKER_SYSTEM_PROMPT
+from src.llm.deep_research.prompt import QUERY_MAKER_SYSTEM_PROMPT, QUERY_MAKER_USER_PROMPT
 from src.llm.agent_core.agent import Agent
+from src.llm.utils.helper_functions import extract_json
 from src.llm.deep_research.constant import DeepResearchConstants
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,10 @@ class QueryMaker(Agent):
 
         super().__init__(
             system_prompt=QUERY_MAKER_SYSTEM_PROMPT,
-            user_prompt=f"Research question: {state['query']}",
+            user_prompt=QUERY_MAKER_USER_PROMPT.format(
+                query = state["query"],
+                extra = state.get("extra") or "NULL"
+            ),
             model=model,
             temperature=temperature,
             max_iteration=max_iteration,
@@ -43,10 +47,10 @@ def query_node(state: ResearchState) -> ResearchState:
     ai_response, _ = query_agent.invoke(chat_history)
     logger.info("QueryMaker Agent invoke completed sucessfully")
     logger.info(f"Generated response {ai_response}")
+    ai_response = extract_json(ai_response)
     plan = json.loads(ai_response)
-
+    size = len(plan["subtopics"])
     state["subtopics"] = plan["subtopics"]
     state["success_criteria"] = plan["success_criteria"]
-    state["covered_subtopics"] = {t: 0 for t in plan["subtopics"]}
     state["current_subtopic"] = plan["subtopics"][0]
     return state

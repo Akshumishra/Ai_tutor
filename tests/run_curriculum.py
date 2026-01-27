@@ -44,8 +44,8 @@ def run_curriculum(user_id: str, topic_id: str):
 
 
 def main():
-    USER_ID = "0249cfc3-cce2-466e-9413-dc6db145ac5c"
-    TOPIC_ID = "4e4af430-12cd-4004-a44b-2148e3a1f03a"
+    USER_ID = "9ac8f8d5-3456-403c-a45b-f1a42ac0a745"
+    TOPIC_ID = "e0bb80b1-db7b-4897-81f8-da3fc829904b"
     # TOPIC_ID = str(uuid4())  # generate new topic_id when needed
     run_curriculum(USER_ID, TOPIC_ID)
 

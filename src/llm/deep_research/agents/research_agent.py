@@ -17,53 +17,71 @@ class Researcher(Agent):
         max_iteration: int = DeepResearchConstants.DEFAULT_MAX_RETRIES,
     ):
         self.state = state
+
+        logger.info("Initializing Researcher Agent")
+
         logger.info(
-            "Initializing Researcher Agent"
+            "Researcher received %d subtopics | existing_sources=%d",
+            len(state.get("subtopics", [])),
+            len(state.get("sources", [])),
         )
+
+        missing = state.get("missing")
         logger.info(
-        "Researcher received %d subtopics | existing_sources=%d",
-        len(state.get("subtopics",[])),
-        len(state.get("sources",[])),
+            "Researcher received missing feedback: %s | existing_sources=%d",
+            "YES" if missing else "NO",
+            len(state.get("sources", [])),
         )
+
+        if missing is not None and not isinstance(missing, str):
+            raise TypeError(
+                f"missing must be str or None, got {type(missing)}"
+            )
+
         current = state.get("current_subtopic")
         if not current:
             raise ValueError("Researcher invoked without current_subtopic")
+
         super().__init__(
             system_prompt=REACT_SYSTEM_PROMPT,
             user_prompt=REACT_HUMAN_PROMPT.format(
                 query=state["query"],
-                topic=state["current_subtopic"],
+                topic=current,
+                subtopics=state.get("subtopics", []),
+                missing=missing,
+                improvement_instructions=state.get("improvement_instructions"),
                 evidence=[
                     s["content"]
-                    for s in state.get("sources",[])
-                    if s.get("subtopic") == state["current_subtopic"]
+                    for s in state.get("sources", [])
+                    if s.get("subtopic") == current
                 ],
-                scratchpad=state.get("scratchpad",""),
+                scratchpad=state.get("scratchpad", ""),
             ),
             model=model,
             temperature=temperature,
             max_iteration=max_iteration,
         )
-        logger.info("Researcher Agent initialized successfully")
+
 
     def on_tool_result(self, tool_name: str, args: dict, result: dict):
         scratchpad = self.state.setdefault("scratchpad", "")
         sources = self.state.setdefault("sources", [])
         covered = self.state.setdefault("covered_subtopics", {})
-        executed = self.state.setdefault("executed_searches", set())
         search_count = self.state.setdefault("search_count", {})
-        logger.debug("Tool result keys: %s", result.keys())
+
+        executed = set(self.state.setdefault("executed_searches", []))
 
         subtopic = self.state["current_subtopic"]
         query = args.get("query")
+        print(f"### query: {query}")
 
-        # Deduplicate searches
         if query in executed:
             logger.info("Skipping duplicate search: %s", query)
             return
-        executed.add(query)
 
-        # Max search guard
+        executed.add(query)
+        self.state["executed_searches"] = list(executed)
+
         count = search_count.get(subtopic, 0)
         if count >= 5:
             logger.warning("Max searches reached for subtopic: %s", subtopic)
@@ -73,25 +91,50 @@ class Researcher(Agent):
         payload = result.get("results", {})
         responses = payload.get("responses", [])
 
-
         if not responses:
             logger.warning("No responses returned for subtopic: %s", subtopic)
             return
-        logger.debug(
-            "WebSearch responses sample: %s",
-            responses[:1] if isinstance(responses, list) else responses
-        )
 
-        facts = extract_atomic_facts(responses, subtopic)
+        existing_urls = {s["url"] for s in sources}
+
+        facts = []
+        for r in responses:
+            url = r.get("url")
+            content = r.get("content")
+            if not url or not content or url in existing_urls:
+                continue
+
+            facts.append({
+                "content": content.strip(),
+                "url": url,
+                "source": r.get("source", "web"),
+                "subtopic": subtopic,
+                "query": query,
+                "year": r.get("year"),  # optional
+            })
+
+        if not facts:
+            return
 
         sources.extend(facts)
         covered[subtopic] = covered.get(subtopic, 0) + len(facts)
 
         scratchpad += f"\nSEARCH executed for subtopic: {subtopic}"
+        for f in facts:
+            claim_block = (
+                f"\nClaim: {f['content']}\n"
+                f"Source: {f['url']}\n"
+                f"Dimension: definition\n"
+            )
+            if claim_block not in scratchpad:
+                scratchpad += claim_block
 
-        self.state["sources"] = sources
-        self.state["covered_subtopics"] = covered
-        self.state["scratchpad"] = scratchpad
+        self.state.update({
+            "sources": sources,
+            "covered_subtopics": covered,
+            "scratchpad": scratchpad,
+        })
+
 
 
 
@@ -120,7 +163,6 @@ def extract_atomic_facts(results: list, subtopic: str) -> list[dict]:
         content = r.get("content")
         url = r.get("url")
 
-        # 🚫 Skip entries without URL
         if not content or not url:
             continue
 
