@@ -16,7 +16,7 @@ def run_curriculum(user_id: str, topic_id: str):
         assistant_msg = {"role": "assistant", "content": response}
         chat_history.append(assistant_msg)
         append_response_json(path, assistant_msg)
-        # append_response_json(path, extract(tool_call))
+        append_response_json(path, extract(tool_call))
         print(f"[AI]: {response}")
 
     while True:
@@ -34,7 +34,7 @@ def run_curriculum(user_id: str, topic_id: str):
             chat_history=chat_history,
         )
 
-        # append_response_json(path, extract(tool_call))
+        append_response_json(path, extract(tool_call))
 
         assistant_msg = {"role": "assistant", "content": response}
         chat_history.append(assistant_msg)
@@ -45,8 +45,8 @@ def run_curriculum(user_id: str, topic_id: str):
 
 def main():
     USER_ID = "9ac8f8d5-3456-403c-a45b-f1a42ac0a745"
-    TOPIC_ID = "e0bb80b1-db7b-4897-81f8-da3fc829904b"
-    # TOPIC_ID = str(uuid4())  # generate new topic_id when needed
+    # TOPIC_ID = "e0bb80b1-db7b-4897-81f8-da3fc829904b"
+    TOPIC_ID = str(uuid4())  # generate new topic_id when needed
     run_curriculum(USER_ID, TOPIC_ID)
 
 

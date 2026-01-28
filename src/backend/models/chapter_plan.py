@@ -12,6 +12,7 @@ class ChapterPlan(BaseModel):
         UUID(as_uuid=True),
         ForeignKey("chapters.id", ondelete="CASCADE"),
         nullable=False,
+        default=Status.PENDING.value,
     )
     status = Column(
         Enum(Status, values_callable=lambda e: [member.value for member in e]),

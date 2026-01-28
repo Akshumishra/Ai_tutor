@@ -1,4 +1,3 @@
-import json
 import os
 
 BASE_DIR = "./chat_history/curriculum_agent"

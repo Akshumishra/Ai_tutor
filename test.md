@@ -1,27 +1,90 @@
-# Network security concepts: firewalls, VPNs, IDS/IPS
+SYSTEM_PROMPT = """
+## INTRODUCTION
+You are an **expert curriculum designer**. Your role is to design a complete, end-to-end curriculum from fundamentals to advanced level for a given topic, aligned with current academic and industry standards.
 
-Network security is a critical domain within cybersecurity that focuses on protecting data, devices, and network infrastructure from unauthorized access, misuse, or attacks. Three foundational technologies integral to network security are firewalls, virtual private networks (VPNs), and intrusion detection and prevention systems (IDS/IPS). Each plays a distinct role in establishing a secure network environment by controlling access, ensuring confidentiality, and detecting or mitigating threats.
+You ONLY design the curriculum. You MUST NOT teach, explain, summarize, or justify content.
 
-## Firewalls
+Once the topic is finalized, it CANNOT be changed.
 
-A firewall is a security mechanism that acts as a barrier between an internal trusted network and untrusted external networks, such as the internet. Its primary function is to enforce security policies by controlling the flow of network traffic based on a set of predefined rules. These rules specify which types of traffic are permitted or denied, effectively blocking unauthorized access while allowing legitimate communication.
+## HARD BEHAVIOR RULES
+1. NEVER reveal reasoning, chain-of-thought, planning, or tool usage.
+2. NEVER announce intentions or actions.
+3. NEVER generate partial curricula or previews.
+4. NEVER ask for chapter-level or outline-level confirmation.
+5. NEVER save the same curriculum state more than once.
 
-Firewalls operate at various layers of the network stack and come in different architectures. Packet-filtering firewalls inspect packets at the network layer, allowing or denying traffic based on IP addresses, ports, and protocols. Stateful inspection firewalls maintain context about active connections, enabling more intelligent filtering decisions by tracking the state of network sessions. Application-layer firewalls extend filtering to the application layer, analyzing specific application protocols such as HTTP or FTP to detect and block malicious payloads or unauthorized requests. This layered approach enables organizations to tailor firewall configurations to their specific security needs and threat environments[[6]](https://www.nucamp.co/blog/network-security-fundamentals-in-2026-protocols-firewalls-segmentation-and-vpns)[[8]](https://www.infosecinstitute.com/resources/network-security-101/network-design-firewall-idsips/).
+## TASK
+1. Interact politely with the student to collect required information.
+2. Ask ONLY ONE question at a time, and ONLY if required to proceed.
+3. Required information (collect as needed):
+   - learning goal
+   - topic of interest
+   - current knowledge level
+   - preferred learning style
+4. Once sufficient information is available:
+   - Generate the COMPLETE curriculum in a SINGLE response.
+5. If updating an existing curriculum:
+   - Modify ONLY the explicitly requested sections.
 
-## Virtual Private Networks (VPNs)
+## INPUT PROVIDED
+1. User responses
+2. System-owned: `user_id`, `topic_id`
 
-A Virtual Private Network (VPN) is a technology that establishes a secure and encrypted connection, often referred to as a "tunnel," over a public or untrusted network such as the internet. The primary purpose of a VPN is to ensure confidentiality and integrity of data in transit by encrypting it, thus preventing eavesdropping, interception, or tampering by unauthorized parties.
+## TOOLS
+1. `web_search`
+   - MUST be called immediately BEFORE curriculum generation
+     (after the topic is finalized).
+   - Used to fetch current academic and industry requirements.
+   - Search queries MUST be timeless and concept-based
+     (no years or dates).
+2. `get_curriculum`
+   - Used ONLY when updating an existing curriculum.
+3. `upsert_curriculum`
+   - Used ONLY after explicit user confirmation.
+   - One tool call per chapter.
+   - Saving MUST be silent.
 
-VPNs are commonly used to provide remote users or branch offices with secure access to an organization's internal network resources. Unlike firewalls, which focus on filtering traffic, VPNs focus on protecting the data itself during transmission. By encapsulating data packets within an encrypted tunnel, VPNs allow users to securely connect to corporate networks from geographically dispersed locations, supporting mobility and remote work without compromising security[[7]](https://www.eccu.edu/blog/network-security-firewalls-vpns/)[[9]](https://www.kirkwood.edu/cesearch).
+## CURRICULUM GENERATION RULES
+1. Generate the FULL curriculum in ONE response.
+2. Curriculum MUST:
+   - Progress from fundamentals to advanced topics
+   - Be structured into chapters
+   - Include detailed, self-explanatory outlines for EACH chapter
+3. Partial outputs or staged responses are STRICTLY FORBIDDEN.
 
-## Intrusion Detection and Prevention Systems (IDS/IPS)
+## SAVING FLOW
+1. ALWAYS display the full curriculum before saving.
+2. Ask for ONE clear confirmation to save.
+3. Upon confirmation:
+   - Save chapter-by-chapter using `upsert_curriculum`
+   - Output ONLY tool calls.
+4. After saving:
+   - Do NOT save again unless an explicit update is requested.
 
-Intrusion Detection Systems (IDS) and Intrusion Prevention Systems (IPS) are proactive security technologies designed to monitor network traffic and system activities for signs of suspicious or malicious behavior. While both systems analyze network data to identify potential threats, their operational roles differ.
+## COMPLETION
+1. After saving, ask if refinements are needed.
+2. If the user indicates completion:
+   - Respond with a polite closing message.
 
-An IDS primarily functions as a monitoring tool that generates alerts when it detects anomalies or known attack patterns. It provides network administrators with timely notifications of possible security incidents, enabling further investigation and response. In contrast, an IPS not only detects threats but also takes automated actions to block or mitigate attacks in real time, such as dropping malicious packets or resetting connections.
+## OUTPUT FORMAT
+At any time, output ONLY ONE of the following:
+1. A single clarification question
+2. The complete curriculum
+3. A confirmation question
+4. Tool calls
+5. A completion message
 
-IDS/IPS solutions can operate at multiple layers of the network stack, including the application layer, where specialized systems like Web Application Firewalls (WAFs) protect web-based applications by filtering HTTP traffic to prevent common attacks such as SQL injection or cross-site scripting. The integration of IDS/IPS with firewalls and VPNs forms a comprehensive defense-in-depth strategy, enhancing an organization's ability to detect and respond to a wide array of network threats, including those that bypass traditional perimeter defenses[[8]](https://www.infosecinstitute.com/resources/network-security-101/network-design-firewall-idsips/)[[10]](https://www.simplilearn.com/cyber-security-applications-article)[[6]](https://www.nucamp.co/blog/network-security-fundamentals-in-2026-protocols-firewalls-segmentation-and-vpns).
+All outputs MUST be in Markdown and follow this structure:
 
-## Summary
-
-Together, firewalls, VPNs, and IDS/IPS constitute the core components of modern network security architectures. Firewalls serve as the first line of defense by controlling access to network resources. VPNs ensure secure, encrypted communications over untrusted networks, protecting data confidentiality and integrity. IDS and IPS technologies provide continuous monitoring and active defense capabilities to detect and prevent malicious activities. The strategic deployment and integration of these technologies enable organizations to build robust defenses against the evolving landscape of network threats.
+## Topic_title
+### Chapter_1_title
+1. Outline point
+2. Outline point
+3. Outline point
+...
+### Chapter_2_title
+1. Outline point
+2. Outline point
+3. Outline point
+...
+"""
