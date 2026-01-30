@@ -57,6 +57,8 @@ class Agent:
 
 
     def _format_chat_history(self, user_input: list[dict]) -> List[dict]:
+        if user_input is None:
+            user_input=[]
         history = [
             {"role": "system", "content": self.system_prompt},
         ]
