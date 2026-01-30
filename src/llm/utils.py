@@ -31,3 +31,10 @@ def extract(tool_results):
         result.append(tool["input"])
         result.append(tool["output"])
     return result
+
+def parse_outline(outline_text: str) -> list[str]:
+    return [
+        line.strip("- ").strip()
+        for line in outline_text.split("\n")
+        if line.strip()
+    ]

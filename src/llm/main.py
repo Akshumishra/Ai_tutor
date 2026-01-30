@@ -1,6 +1,3 @@
-
-import json
-
 from src.llm.curriculum_agent.agent import CurriculumAgent
 from src.llm.curriculum_agent.constant import CurriculumConstants
 from src.llm.curriculum_agent.tools.upsert_curriculum import make_upsert_curriculum_tool
@@ -15,7 +12,7 @@ from src.llm.teacher_agent.tools.get_chapter import make_get_chapter
 from src.llm.teacher_agent.tools.update_status import make_update_status
 from src.llm.teacher_agent.tools.create_quiz import make_create_quiz
 
-from src.llm.planner.chapter_planner import Planner
+from src.llm.planner.agent import PlannerAgent
 from src.llm.planner.constant import PlannerConstants
 
 
@@ -39,16 +36,6 @@ def run_curriculum_agent(user_id: str, topic_id: str, chat_history: list):
     return ai_response, tool_call
 
 
-def run_planner(topic_id: str):
-    plan = Planner(
-        topic_id=topic_id,
-        temperature=PlannerConstants.TEMPERATURE,
-        model=PlannerConstants.MODEL,
-        max_retries=PlannerConstants.MAX_RETRIES,
-    )
-    plan.invoke()
-
-
 def run_teacher_agent(chapter_id, chat_history):
     agent = TeacherAgent(
         chapter_id=chapter_id,
@@ -66,3 +53,20 @@ def run_teacher_agent(chapter_id, chat_history):
     return result
 
 
+def run_planner(draft: str,sources: list, topic_title: str, user_summary: str,all_chapters: list, current_chapter_title: str, outline_title, chat_history = None):
+    plan = PlannerAgent(
+        draft=draft,
+        sources=sources,
+        topic_title=topic_title,
+        user_summary=user_summary,
+        all_chapters=all_chapters,
+        current_chapter_title=current_chapter_title,
+        outline_title = outline_title,
+        temperature=PlannerConstants.DEFAULT_TEMPERATURE,
+        model=PlannerConstants.DEFAULT_MODEL,
+    )
+    if chat_history is None:
+        chat_history=[]
+    plan.add_tool(make_web_search_tool())
+    ai_response, tool_call = plan.invoke(chat_history)
+    return ai_response, tool_call
