@@ -1,7 +1,9 @@
 import json
+import re
 from openai import OpenAI
 from typing import List, Optional
 from openai import AsyncOpenAI
+
 from src.llm.config import LLMConfig
 from src.llm.agent_core.constant import Constants
 from src.llm.agent_core.tool import Tool
@@ -49,14 +51,20 @@ class Agent:
             stream=stream,
         )
 
+    @staticmethod
+    def _is_unformatted_prompt(prompt: str) -> bool:
+        return bool(re.search(r"\{[a-zA-Z_][a-zA-Z0-9_]*\}", prompt))
+
 
     def _format_chat_history(self, user_input: list[dict]) -> List[dict]:
-        if user_input is None:
-            user_input=[]
         history = [
             {"role": "system", "content": self.system_prompt},
         ]
         if self.user_prompt:
+            if self._is_unformatted_prompt(self.user_prompt):
+                raise RuntimeError(
+                    f"Unformatted user_prompt detected: {self.user_prompt}"
+                )
             history.append({"role": "user", "content": self.user_prompt})
 
         if isinstance(user_input, list):
@@ -67,6 +75,8 @@ class Agent:
         return history
 
     def invoke(self, chat_history=None):
+        if chat_history is None:
+            chat_history = []
         chat_history = self._format_chat_history(chat_history)
         tool_calls = []
 
@@ -113,6 +123,8 @@ class Agent:
     
 
     def stream(self, chat_history=None):
+        if chat_history is None:
+            chat_history = []
         chat_history = self._format_chat_history(chat_history)
         tool_calls = []
         final_text = ""
@@ -211,6 +223,8 @@ class Agent:
    
     
     async def astream(self, chat_history=None):
+        if chat_history is None:
+            chat_history = []
         chat_history = self._format_chat_history(chat_history)
         tool_calls = []
         final_text = ""
@@ -271,3 +285,4 @@ class Agent:
                                 "tool_calls": tool_calls,
                             },
                         }
+                        
