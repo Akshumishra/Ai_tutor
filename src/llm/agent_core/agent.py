@@ -51,6 +51,8 @@ class Agent:
 
 
     def _format_chat_history(self, user_input: list[dict]) -> List[dict]:
+        if user_input is None:
+            user_input=[]
         history = [
             {"role": "system", "content": self.system_prompt},
         ]
@@ -64,7 +66,7 @@ class Agent:
 
         return history
 
-    def invoke(self, chat_history):
+    def invoke(self, chat_history=None):
         chat_history = self._format_chat_history(chat_history)
         tool_calls = []
 
@@ -110,7 +112,7 @@ class Agent:
     
     
 
-    def stream(self, chat_history):
+    def stream(self, chat_history=None):
         chat_history = self._format_chat_history(chat_history)
         tool_calls = []
         final_text = ""
@@ -208,7 +210,7 @@ class Agent:
         )
    
     
-    async def astream(self, chat_history):
+    async def astream(self, chat_history=None):
         chat_history = self._format_chat_history(chat_history)
         tool_calls = []
         final_text = ""

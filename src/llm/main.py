@@ -16,6 +16,9 @@ from src.llm.planner.agent import PlannerAgent
 from src.llm.planner.constant import PlannerConstants
 
 
+from src.llm.logger import setup_logging
+
+setup_logging()
 def run_curriculum_agent(user_id: str, topic_id: str, chat_history: list):
 
     agent = CurriculumAgent(
@@ -53,20 +56,10 @@ def run_teacher_agent(chapter_id, chat_history):
     return result
 
 
-def run_planner(draft: str,sources: list, topic_title: str, user_summary: str,all_chapters: list, current_chapter_title: str, outline_title, chat_history = None):
+def run_planner_agent(topic_id: str):
     plan = PlannerAgent(
-        draft=draft,
-        sources=sources,
-        topic_title=topic_title,
-        user_summary=user_summary,
-        all_chapters=all_chapters,
-        current_chapter_title=current_chapter_title,
-        outline_title = outline_title,
-        temperature=PlannerConstants.DEFAULT_TEMPERATURE,
-        model=PlannerConstants.DEFAULT_MODEL,
-    )
-    if chat_history is None:
-        chat_history=[]
-    plan.add_tool(make_web_search_tool())
-    ai_response, tool_call = plan.invoke(chat_history)
-    return ai_response, tool_call
+            topic_id=topic_id,
+            temperature=PlannerConstants.DEFAULT_TEMPERATURE,
+            model=PlannerConstants.DEFAULT_MODEL,
+        )
+    plan.run()
