@@ -39,6 +39,13 @@ class PlannerAgent(Agent):
             "success_criteria": {},
             "index": 0,
             "current_subtopic": None,
+            "reviewer_attempts": 0,
+            "scores": {},
+            "final_score": 0.0,
+            "draft": "",
+            "critique": "",
+            "missing": "",
+            "improvement_instructions": "",
         }
 
         final_state = app.invoke(initial_state, {"recursion_limit": 100})
