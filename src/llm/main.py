@@ -1,8 +1,5 @@
 from src.llm.curriculum_agent.agent import CurriculumAgent
 from src.llm.curriculum_agent.constant import CurriculumConstants
-from src.llm.curriculum_agent.tools.upsert_curriculum import make_upsert_curriculum_tool
-from src.llm.curriculum_agent.tools.get_curriculum import make_get_curriculum_tool
-from src.llm.curriculum_agent.tools.web_search import make_web_search_tool
 
 from src.llm.teacher_agent.agent import TeacherAgent
 from src.llm.teacher_agent.constant import TeacherConstants
@@ -19,7 +16,7 @@ from src.llm.planner.constant import PlannerConstants
 from src.llm.logger import setup_logging
 
 setup_logging()
-def run_curriculum_agent(user_id: str, topic_id: str, chat_history: list):
+def run_curriculum_agent(user_id: str, topic_id: str, chat_history: list[dict], user_input):
     agent = CurriculumAgent(
         user_id=user_id,
         topic_id=topic_id,
@@ -27,11 +24,11 @@ def run_curriculum_agent(user_id: str, topic_id: str, chat_history: list):
         temperature=CurriculumConstants.TEMPERATURE,
         max_iteration=CurriculumConstants.MAX_ITERATION,
     )
-    agent.add_tool(make_upsert_curriculum_tool(user_id, topic_id))
-    agent.add_tool(make_get_curriculum_tool(topic_id))
-    agent.add_tool(make_web_search_tool())
-    ai_response = agent.stream(chat_history)
-    return ai_response
+    try:
+        for event in agent.run(chat_history=chat_history,user_input=user_input):
+            yield event
+    except Exception as e:
+        raise e
 
 
 def run_teacher_agent(chapter_id, chat_history):

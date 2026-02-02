@@ -1,8 +1,6 @@
 import logging
 
 from src.llm.main import run_planner_agent
-from src.llm.deep_research.graph import app
-
 from src.llm.logger import setup_logging
 
 

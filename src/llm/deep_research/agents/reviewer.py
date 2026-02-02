@@ -21,17 +21,10 @@ class Reviewer(Agent):
 
         super().__init__(
             system_prompt=REVIEWER_SYSTEM_PROMPT,
-            user_prompt=REVIEWER_USER_PROMPT.format(
-                current_subtopic=state["current_subtopic"],
-                current_coverage=state.get("covered_subtopics", {}),
-                scratchpad=state.get("scratchpad", ""),
-                sources=state.get("sources",[])
-            ),
             model=model,
             temperature=temperature,
             max_iteration=max_iteration,
         )
-
         logger.info("Reviewer Agent initialized successfully")
 
 
@@ -42,8 +35,15 @@ def reviewer_node(state: ResearchState) -> ResearchState:
         temperature=DeepResearchConstants.TEMPERATURE,
         max_iteration=DeepResearchConstants.MAX_RETRIES,
     )
+    user_prompt=REVIEWER_USER_PROMPT.format(
+                current_subtopic=state["current_subtopic"],
+                current_coverage=state.get("covered_subtopics", {}),
+                scratchpad=state.get("scratchpad", ""),
+                sources=state.get("sources",[])
+            )
+    chat_history = {"role": "user", "content": user_prompt}
 
-    ai_response, _ = reviewer_agent.invoke([])
+    ai_response, _ = reviewer_agent.invoke(chat_history)
 
     try:
         data = json.loads(ai_response)

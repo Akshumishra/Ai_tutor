@@ -1,5 +1,4 @@
 import json
-import re
 from openai import OpenAI
 from typing import List, Optional
 from openai import AsyncOpenAI
@@ -14,7 +13,6 @@ class Agent:
     def __init__(
         self,
         system_prompt: str,
-        user_prompt: str = None,
         model: str = Constants.DEFAULT_MODEL,
         temperature: float = Constants.DEFAULT_TEMPERATURE,
         max_iteration: int = Constants.DEFAULT_MAX_ITERATION,
@@ -23,7 +21,6 @@ class Agent:
         self.client = OpenAI(api_key=LLMConfig.OPENAI_API_KEY)
         self.client_async = AsyncOpenAI(api_key=LLMConfig.OPENAI_API_KEY)
         self.system_prompt = system_prompt
-        self.user_prompt = user_prompt
         self.model = model
         self.temperature = temperature
         self.max_iteration = max_iteration
@@ -51,35 +48,28 @@ class Agent:
             stream=stream,
         )
 
-    @staticmethod
-    def _is_unformatted_prompt(prompt: str) -> bool:
-        return bool(re.search(r"\{[a-zA-Z_][a-zA-Z0-9_]*\}", prompt))
-
-
     def _format_chat_history(self, user_input: list[dict]) -> List[dict]:
         if user_input is None:
             user_input=[]
         history = [
             {"role": "system", "content": self.system_prompt},
         ]
-        if self.user_prompt:
-            if self._is_unformatted_prompt(self.user_prompt):
-                raise RuntimeError(
-                    f"Unformatted user_prompt detected: {self.user_prompt}"
-                )
-            history.append({"role": "user", "content": self.user_prompt})
-
         if isinstance(user_input, list):
             history.extend(user_input)
         else:
             history.append(user_input)
-
         return history
 
     def invoke(self, chat_history=None):
         if chat_history is None:
             chat_history = []
+
         chat_history = self._format_chat_history(chat_history)
+        user_input = chat_history[-1]
+        if user_input["role"]=="user" and user_input["content"]=="":
+            assistant_text = "Enter input"
+            return assistant_text, []
+            
         tool_calls = []
 
         for _ in range(self.max_iteration):
@@ -127,6 +117,7 @@ class Agent:
     def stream(self, chat_history=None):
         if chat_history is None:
             chat_history = []
+
         chat_history = self._format_chat_history(chat_history)
         tool_calls = []
         final_text = ""
@@ -140,12 +131,10 @@ class Agent:
 
             with self._call_llm(chat_history=chat_history,stream=True) as stream:
                 for event in stream:
-                    #  Normal text streaming
                     if event.type == "response.output_text.delta":
                         final_text += event.delta
                         yield {"type": "text", "data": event.delta}
 
-                    #  IMPLICIT tool start
                     elif event.type == "response.output_item.added":
                         item = event.item
 
@@ -156,11 +145,9 @@ class Agent:
                             }
                             tool_args_buffer = ""
 
-                    #  Tool arguments streaming
                     elif event.type == "response.function_call_arguments.delta":
                         tool_args_buffer += event.delta or ""
 
-                    #  IMPLICIT tool completion
                     elif event.type == "response.function_call_arguments.done":
                         if current_tool:
                             try:
@@ -203,7 +190,6 @@ class Agent:
                             current_tool = None
                             tool_args_buffer = ""
 
-                    #  Response finished
                     elif event.type == "response.completed":
                         yield {
                             "type": "final",
@@ -227,6 +213,7 @@ class Agent:
     async def astream(self, chat_history=None):
         if chat_history is None:
             chat_history = []
+            
         chat_history = self._format_chat_history(chat_history)
         tool_calls = []
         final_text = ""

@@ -25,9 +25,7 @@ class QueryMaker(Agent):
 
         super().__init__(
             system_prompt=QUERY_MAKER_SYSTEM_PROMPT,
-            user_prompt=QUERY_MAKER_USER_PROMPT.format(
-                query=state["query"], extra=state.get("extra") or "NULL"
-            ),
+
             model=model,
             temperature=temperature,
             max_iteration=max_iteration,
@@ -44,7 +42,10 @@ def query_node(state: ResearchState) -> ResearchState:
         max_iteration=DeepResearchConstants.MAX_RETRIES,
     )
     logger.info("QueryMaker Agent object created sucessfully")
-    chat_history = []
+    user_prompt=QUERY_MAKER_USER_PROMPT.format(
+                query=state["query"], extra=state.get("extra") or "NULL"
+            )
+    chat_history = [{"role": "user","content": user_prompt}]
     ai_response, _ = query_agent.invoke(chat_history)
     logger.info("QueryMaker Agent invoke completed sucessfully")
     logger.info(f"Generated response {ai_response}")

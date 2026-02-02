@@ -2,6 +2,7 @@ from uuid import uuid4
 import os
 
 from src.llm.main import run_curriculum_agent
+from src.llm.curriculum_agent.prompt import INITIAL_USER_PROMPT
 from src.llm.utils import load_json, append_response_json, add_message
 
 BASE_DIR = "./chat_history/curriculum_agent"
@@ -19,39 +20,34 @@ def run_curriculum(user_id: str, topic_id: str):
 
     while True:
         if chat_history:
-            user_input = input("\n[You]: ").strip()
+            print("\n")
+            user_input = input("\n[Your Response]: ").strip()
             if user_input.lower() in ("bye", "good bye"):
                 break
-
-            user_msg = {"role": "user", "content": user_input}
-            chat_history.append(user_msg)
-            append_response_json(path, user_msg)
-
+        else: 
+            user_input = INITIAL_USER_PROMPT
+    
         final_data = None
         print("\n[Expert] ", end="", flush=True)
+        try:
+            for event in run_curriculum_agent(user_id, topic_id, chat_history,user_input):
+                if event["type"] == "text":
+                    print(event["data"], end="", flush=True)
+                elif event["type"] == "final":
+                    final_data = event["data"]
 
-        for event in run_curriculum_agent(
-            user_id=user_id,
-            topic_id=topic_id,
-            chat_history=chat_history,
-        ):
-            if event["type"] == "text":
-                print(event["data"], end="", flush=True)
-
-            elif event["type"] == "tool_call":
-                pass
-
-            elif event["type"] == "final":
-                final_data = event["data"]
-
-        chat_history = add_message(final_data=final_data)
-        append_response_json(path, chat_history)
+            user_input={"role": "user", "content": user_input}
+            append_response_json(path, user_input)
+            chat_history = add_message( final_data=final_data)
+            append_response_json(path, chat_history)
+        except Exception as e:
+            print(e)
 
 
 def main():
     USER_ID = "0249cfc3-cce2-466e-9413-dc6db145ac5c"
-    # TOPIC_ID = "4e4af430-12cd-4004-a44b-2148e3a1f03a"
-    TOPIC_ID = str(uuid4())
+    TOPIC_ID = "0ce4f55a-b2bd-4364-9897-adc84ff3219e"
+    # TOPIC_ID = str(uuid4())
 
     run_curriculum(USER_ID, TOPIC_ID)
 

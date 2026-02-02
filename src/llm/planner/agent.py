@@ -18,9 +18,9 @@ class PlannerAgent(Agent):
         temperature: float = PlannerConstants.DEFAULT_TEMPERATURE,
     ):
         self.topic_id = topic_id
+        self.user_prompt = ""
         super().__init__(
             system_prompt=SYSTEM_PROMPT,
-            user_prompt="",
             model=model,
             temperature=temperature,
         )
@@ -51,9 +51,7 @@ class PlannerAgent(Agent):
         final_state = app.invoke(initial_state, {"recursion_limit": 100})
 
         if not final_state.get("draft"):
-            raise RuntimeError(
-                f"No draft generated for chapter: {chapter['chapter_title']}"
-            )
+            raise RuntimeError(PlannerConstants.RUNTIME_ERROR)
         return final_state
 
     def _build_user_prompt(
@@ -95,7 +93,8 @@ class PlannerAgent(Agent):
                     chapter=chapter,
                     outline=outline,
                 )
-                final_content,_ = self.invoke()
+                chat_history = {"role":"user","content": self.user_prompt}
+                final_content,_ = self.invoke(chat_history=chat_history)
 
                 save_plan(
                     chapter_id=chapter["chapter_id"],
