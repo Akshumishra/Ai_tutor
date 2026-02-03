@@ -6,3 +6,5 @@ class PlannerConstants:
     TEMPERATURE = 0.3
     MODEL = "gpt-4.1-mini"
     MAX_RETRIES = 2
+
+    RUNTIME_ERROR = "No draft generated for current chapter"

@@ -21,14 +21,6 @@ class Synthesizer(Agent):
 
         super().__init__(
             system_prompt=SYNTHESIS_SYSTEM_PROMPT,
-            user_prompt=SYNTHESIS_USER_PROMPT.format(
-                query=state["query"],
-                subtopics=state["subtopics"],
-                critique=state.get("critique", []),
-                missing=state.get("missing", []),
-                scratchpad=state["scratchpad"],
-                sources=state["sources"],
-            ),
             model=model,
             temperature=temperature,
             max_iteration=max_iteration,
@@ -44,7 +36,15 @@ def synthesizer_node(state: ResearchState) -> ResearchState:
         max_iteration=DeepResearchConstants.MAX_RETRIES,
     )
     logger.info("Synthesizer Agent object created sucessfully")
-    chat_history = []
+    user_prompt=SYNTHESIS_USER_PROMPT.format(
+                query=state["query"],
+                subtopics=state["subtopics"],
+                critique=state.get("critique", []),
+                missing=state.get("missing", []),
+                scratchpad=state["scratchpad"],
+                sources=state["sources"],
+            )
+    chat_history = {"role":"user", "content": user_prompt}
     ai_response, _ = synthesizer_agent.invoke(chat_history)
     logger.info("Synthesizer Agent invoke completed sucessfully")
     state["draft"] = ai_response

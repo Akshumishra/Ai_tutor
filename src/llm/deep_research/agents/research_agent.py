@@ -55,23 +55,11 @@ class Researcher(Agent):
         logger.info(f"{query}")
         super().__init__(
             system_prompt=REACT_SYSTEM_PROMPT,
-            user_prompt=REACT_HUMAN_PROMPT.format(
-                query=query,
-                topic=current,
-                subtopics=state.get("subtopics", []),
-                missing=missing,
-                improvement_instructions=state.get("improvement_instructions"),
-                evidence=[
-                    s["content"]
-                    for s in state.get("sources", [])
-                    if s.get("subtopic") == current
-                ],
-                scratchpad=state.get("scratchpad", ""),
-            ),
             model=model,
             temperature=temperature,
             max_iteration=max_iteration,
         )
+        
 
     def on_tool_result(self, tool_name: str, args: dict, result: dict):
         scratchpad = self.state.setdefault("scratchpad", "")
@@ -163,7 +151,23 @@ def research_node(state: ResearchState) -> ResearchState:
         max_iteration=DeepResearchConstants.MAX_RETRIES,
     )
     logger.info("Researcher Agent object created sucessfully")
-    chat_history = []
+    query = state.get("query")
+    missing = state.get("missing")
+
+    user_prompt=REACT_HUMAN_PROMPT.format(
+                query=query,
+                topic=current,
+                subtopics=state.get("subtopics", []),
+                missing=missing,
+                improvement_instructions=state.get("improvement_instructions"),
+                evidence=[
+                    s["content"]
+                    for s in state.get("sources", [])
+                    if s.get("subtopic") == current
+                ],
+                scratchpad=state.get("scratchpad", ""),
+            )
+    chat_history = {"role":"user","content": user_prompt}
     research_agent.add_tool(make_web_search_tool())
     _, _ = research_agent.invoke(chat_history)
     logger.info("Researcher Agent invoke completed sucessfully")
