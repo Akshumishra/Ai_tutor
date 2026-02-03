@@ -9,4 +9,4 @@ class CurriculumConstants:
 
     ERROR_GENERIC = "Something went wrong. Please try again."
     ERROR_SAVE_CURRICULUM = "Apologies, there was an issue saving your curriculum."
-    VALUE_ERROR = "No input entered by User"
+    NO_INPUT_ERROR = "No input entered by User"

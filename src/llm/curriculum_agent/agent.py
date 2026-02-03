@@ -32,7 +32,7 @@ class CurriculumAgent(Agent):
         self.add_tool(make_get_curriculum_tool(self.topic_id))
         self.add_tool(make_web_search_tool())
         if user_input == "":
-            raise ValueError(CurriculumConstants.VALUE_ERROR)
+            raise ValueError(CurriculumConstants.NO_INPUT_ERROR)
         user_input={"role":"user", "content":user_input}
         chat_history.append(user_input)
         return self.stream(chat_history)
