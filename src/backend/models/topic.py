@@ -27,3 +27,8 @@ class Topic(BaseModel):
         cascade="all, delete-orphan",
         order_by="Chapter.sequence",
     )
+    chats = relationship(
+        "AgentChat",
+        back_populates="topic",
+        cascade="all, delete-orphan",
+    )

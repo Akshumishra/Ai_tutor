@@ -7,6 +7,9 @@ from src.llm.curriculum_agent.tools.upsert_curriculum import make_upsert_curricu
 from src.llm.curriculum_agent.tools.get_curriculum import make_get_curriculum_tool
 from src.llm.curriculum_agent.tools.web_search import make_web_search_tool
 
+from src.llm.curriculum_agent.tools.finalize_curriculum import make_finalize_curriculum_tool
+
+
 class CurriculumAgent(Agent):
     def __init__(
         self,
@@ -31,6 +34,7 @@ class CurriculumAgent(Agent):
         self.add_tool(make_upsert_curriculum_tool(self.user_id, self.topic_id))
         self.add_tool(make_get_curriculum_tool(self.topic_id))
         self.add_tool(make_web_search_tool())
+        self.add_tool(make_finalize_curriculum_tool(self.topic_id))
         if user_input == "":
             raise ValueError(CurriculumConstants.NO_INPUT_ERROR)
         user_input={"role":"user", "content":user_input}
@@ -46,6 +50,14 @@ class CurriculumAgent(Agent):
         if status == "success":
             self.saved_chapters.add(chapter_number)
             self.save_failures = 0
+            # Update topic_id if a real UUID was generated/returned
+            new_id = result.get("topic_id")
+            if new_id and new_id != self.topic_id:
+                self.topic_id = new_id
+                # Re-add tools with the updated ID for consistency
+                self.add_tool(make_upsert_curriculum_tool(self.user_id, self.topic_id))
+                self.add_tool(make_finalize_curriculum_tool(self.topic_id))
+                self.add_tool(make_get_curriculum_tool(self.topic_id))
         else:
             self.save_failures += 1
         if self.save_failures > 1:

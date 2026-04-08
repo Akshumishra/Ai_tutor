@@ -1,4 +1,5 @@
 import logging
+import uuid
 from uuid import UUID
 
 from src.backend.models.topic import Topic
@@ -58,15 +59,23 @@ def make_upsert_curriculum_tool(user_id: str, topic_id: str):
         db = SessionLocal()
         try:
             user_uuid = UUID(user_id)
-            topic_uuid = UUID(topic_id)
-
+            
+            # Robust topic ID handling
+            topic_uuid = None
+            try:
+                topic_uuid = UUID(topic_id)
+            except (ValueError, TypeError):
+                logger.info(f"Placeholder topic_id detected: {topic_id}. Checking for existing topic by title.")
+                # If topic_id is a placeholder, check if we already created a topic with this title for this user
+                existing_topic = db.query(Topic).filter(Topic.user_id == user_uuid, Topic.title == topic).first()
+                if existing_topic:
+                    topic_uuid = existing_topic.id
+                else:
+                    topic_uuid = uuid.uuid4()
+            
             logger.debug("Checking for existing topic")
 
-            existing_topic = (
-                db.query(Topic)
-                .filter(Topic.user_id == user_uuid, Topic.id == topic_uuid)
-                .first()
-            )
+            existing_topic = db.query(Topic).filter(Topic.id == topic_uuid).first()
 
             if existing_topic:
                 logger.info(
@@ -77,7 +86,7 @@ def make_upsert_curriculum_tool(user_id: str, topic_id: str):
             else:
                 logger.info(
                     "Creating new topic",
-                    extra={"topic_id": topic_id, "title": topic},
+                    extra={"topic_id": str(topic_uuid), "title": topic},
                 )
                 new_topic = Topic(
                     id=topic_uuid,
@@ -87,6 +96,7 @@ def make_upsert_curriculum_tool(user_id: str, topic_id: str):
                     user_summary=user_summary,
                 )
                 db.add(new_topic)
+                db.flush() # Ensure it's in the session so chapters can link to it
 
             logger.debug("Checking for existing chapter")
 
@@ -139,6 +149,7 @@ def make_upsert_curriculum_tool(user_id: str, topic_id: str):
             return {
                 "status": "success",
                 "message": "Curriculum saved successfully",
+                "topic_id": str(topic_uuid),
             }
 
         except Exception as e:

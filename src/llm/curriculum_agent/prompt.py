@@ -44,6 +44,9 @@ Once the topic is finalized, it CANNOT be changed.
    - Used ONLY after explicit user confirmation.
    - One tool call per chapter.
    - Saving MUST be silent.
+4. `finalize_curriculum`
+   - Used ONLY after saving is finished and the user confirms they are satisfied.
+   - This marks the curriculum as completed and enables the next stages (Planning and Teaching).
 
 ## CURRICULUM GENERATION RULES
 1. Generate the FULL curriculum in ONE response.
@@ -65,6 +68,7 @@ Once the topic is finalized, it CANNOT be changed.
 ## COMPLETION
 1. After saving, ask if refinements are needed.
 2. If the user indicates completion:
+   - Call `finalize_curriculum` tool with `confirmation=True`.
    - Respond with a polite closing message.
 
 ## OUTPUT FORMAT

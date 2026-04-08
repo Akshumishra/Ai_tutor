@@ -41,10 +41,44 @@ def run_teacher_agent(chapter_id, chat_history, user_message):
         
 
 def run_planner_agent(topic_id: str):
-    plan = PlannerAgent(
-            topic_id=topic_id,
-            temperature=PlannerConstants.DEFAULT_TEMPERATURE,
-            model=PlannerConstants.DEFAULT_MODEL,
-        )
-    plan.run()
+    from src.backend.db.database import SessionLocal
+    from src.backend.models.workflow_status import WorkflowStatus
+    from src.backend.enums.workflow_stage import WorkflowStage
+    from src.backend.enums.status import Status
+    from uuid import UUID
+
+    db = SessionLocal()
+    try:
+        plan = PlannerAgent(
+                topic_id=topic_id,
+                temperature=PlannerConstants.DEFAULT_TEMPERATURE,
+                model=PlannerConstants.DEFAULT_MODEL,
+            )
+        plan.run()
+        
+        # Update status to COMPLETED
+        ws = db.query(WorkflowStatus).filter(
+            WorkflowStatus.topic_id == UUID(topic_id),
+            WorkflowStatus.stage == WorkflowStage.PLANNING
+        ).first()
+        if not ws:
+            ws = WorkflowStatus(topic_id=UUID(topic_id), stage=WorkflowStage.PLANNING)
+            db.add(ws)
+        ws.status = Status.COMPLETED.value
+        db.commit()
+    except Exception as e:
+        # Update status to FAILED
+        ws = db.query(WorkflowStatus).filter(
+            WorkflowStatus.topic_id == UUID(topic_id),
+            WorkflowStatus.stage == WorkflowStage.PLANNING
+        ).first()
+        if not ws:
+            ws = WorkflowStatus(topic_id=UUID(topic_id), stage=WorkflowStage.PLANNING)
+            db.add(ws)
+        ws.status = Status.FAILED.value
+        ws.last_error = str(e)
+        db.commit()
+        raise e
+    finally:
+        db.close()
     
