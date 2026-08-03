@@ -1,9 +1,10 @@
-from src.llm.main import run_teacher_agent
+import asyncio
+from src.llm.main import arun_teacher_agent
 from src.llm.utils import load_json, append_response_json, add_message
 from src.llm.teacher_agent.prompt import USER_PROMPT
 
 
-def main():
+async def main():
     CHAPTER_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbba"
     PATH = "chat_history/teacher_agent/chat_history3.json"
     chat_history = load_json(PATH)
@@ -20,7 +21,7 @@ def main():
         final_data = None
         print("\n[Teacher] ", end="", flush=True)
         try:
-            for event in run_teacher_agent(
+            async for event in arun_teacher_agent(
                 chapter_id=CHAPTER_ID,
                 chat_history=chat_history,
                 user_message=user_message,
@@ -38,4 +39,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
