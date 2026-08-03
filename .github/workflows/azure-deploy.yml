@@ -53,6 +53,8 @@ jobs:
         env:
           DATABASE_URL: sqlite:///./test.db
           GEMINI_API_KEY: "dummy_key_for_tests"
+          TAVILY_API_KEY: "dummy_tavily_key_for_tests"
+          OPENAI_API_KEY: "dummy_openai_key_for_tests"
         run: |
           if [ -d "tests" ]; then pytest tests/; fi
 
