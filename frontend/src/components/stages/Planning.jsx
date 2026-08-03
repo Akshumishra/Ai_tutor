@@ -11,22 +11,12 @@ const STATUS_CONFIG = {
 
 export const Planning = ({ topicId, onComplete }) => {
   const [chapters, setChapters] = useState([]);
-  const [workflowStatus, setWorkflowStatus] = useState(null);
+  const [, setWorkflowStatus] = useState(null);
   const [plannerStarted, setPlannerStarted] = useState(false);
   const [planningDone, setPlanningDone] = useState(false);
   const [logMessages, setLogMessages] = useState(['Waiting to start planning...']);
   const logRef = useRef(null);
   const pollingRef = useRef(null);
-
-  useEffect(() => {
-    // Initial fetch of chapters
-    fetchChapters();
-    fetchWorkflowStatus();
-  }, [topicId]);
-
-  useEffect(() => {
-    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [logMessages]);
 
   const fetchChapters = async () => {
     try {
@@ -35,7 +25,7 @@ export const Planning = ({ topicId, onComplete }) => {
         const data = await res.json();
         setChapters(data);
       }
-    } catch (e) { console.error(e); }
+    } catch (error) { console.error(error); }
   };
 
   const fetchWorkflowStatus = async () => {
@@ -54,8 +44,21 @@ export const Planning = ({ topicId, onComplete }) => {
           startPolling();
         }
       }
-    } catch (e) { console.error(e); }
+    } catch (error) { console.error(error); }
   };
+
+  useEffect(() => {
+    // Initial fetch of chapters
+    fetchChapters();
+    fetchWorkflowStatus();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topicId]);
+
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [logMessages]);
+
+  
 
   const [plannerError, setPlannerError] = useState(null);
 
@@ -70,7 +73,7 @@ export const Planning = ({ topicId, onComplete }) => {
     try {
       await fetch(`http://localhost:8000/api/dashboard/curriculum/${topicId}/finalize`, { method: 'POST' });
       setLogMessages(prev => [...prev, 'Curriculum confirmed as finalized.', 'Planner Agent starting...']);
-    } catch (e) {
+    } catch (e) { console.error(e);
       setLogMessages(prev => [...prev, 'Could not confirm finalization — proceeding anyway...']);
     }
 
@@ -89,7 +92,7 @@ export const Planning = ({ topicId, onComplete }) => {
         return;
       }
       setLogMessages(prev => [...prev, 'Analyzing curriculum chapters...']);
-    } catch (e) {
+    } catch (e) { console.error(e);
       console.error(e);
       setPlannerError('Network error starting planner. Is the backend running?');
       setPlannerStarted(false);
@@ -145,7 +148,7 @@ export const Planning = ({ topicId, onComplete }) => {
             setLogMessages(prev => [...prev, 'Planning failed. Please try again.']);
           }
         }
-      } catch (e) { console.error(e); }
+      } catch (error) { console.error(error); }
     }, 3000);
   };
 

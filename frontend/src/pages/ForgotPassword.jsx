@@ -49,7 +49,7 @@ export const ForgotPassword = () => {
           setError(data.detail || 'Failed to request OTP');
         }
       }
-    } catch (err) {
+    } catch (error) { console.error(error);
       setError('Network error');
     } finally {
       setIsLoading(false);
@@ -72,7 +72,7 @@ export const ForgotPassword = () => {
         const data = await res.json();
         setError(data.detail || 'Invalid OTP');
       }
-    } catch (err) {
+    } catch (error) { console.error(error);
       setError('Network error');
     } finally {
       setIsLoading(false);
@@ -109,7 +109,7 @@ export const ForgotPassword = () => {
         const data = await res.json();
         setError(data.detail || 'Failed to reset password');
       }
-    } catch (err) {
+    } catch (error) { console.error(error);
       setError('Network error');
     } finally {
       setIsLoading(false);

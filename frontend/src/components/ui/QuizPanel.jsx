@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CheckCircle, XCircle, Award, RefreshCw, ChevronRight } from 'lucide-react';
 import { Button } from './Button';
 
-export const QuizPanel = ({ quiz, onPass, onFail, onClose }) => {
+export const QuizPanel = ({ quiz, onPass, onClose }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [results, setResults] = useState(null);

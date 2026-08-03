@@ -52,6 +52,7 @@ export const Landing = () => {
   );
 };
 
+// eslint-disable-next-line no-unused-vars
 const FeatureCard = ({ icon: Icon, title, desc }) => (
   <div className="bg-dark-800/50 border border-dark-700 p-8 rounded-2xl flex flex-col items-center text-center hover:border-gold-500/30 transition-all hover:-translate-y-1">
     <div className="w-14 h-14 bg-dark-700 rounded-xl flex items-center justify-center text-gold-500 mb-6">

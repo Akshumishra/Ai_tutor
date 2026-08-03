@@ -18,6 +18,7 @@ export const Teaching = ({ topicId, userId }) => {
 
   useEffect(() => {
     fetchChapters();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicId]);
 
   useEffect(() => {
@@ -120,12 +121,12 @@ export const Teaching = ({ topicId, userId }) => {
             if (parsed.type === 'text') {
               textToAdd += parsed.data;
             } else if (parsed.type === 'tool_call') {
-              const toolName = parsed.data?.input?.name;
+              // const toolName = parsed.data?.input?.name;
               // if (toolName) {
               //   textToAdd += `\n> *Agent is using tool: ${toolName}...*\n\n`;
               // }
             }
-          } catch {}
+          } catch (error) { console.error(error); }
         }
       }
 
@@ -196,7 +197,7 @@ export const Teaching = ({ topicId, userId }) => {
 
   const activeChapter = getActiveChapter();
   const messages = getActiveMessages();
-  const activeIndex = chapters.findIndex(c => c.id === activeChapterId);
+  // const activeIndex = chapters.findIndex(c => c.id === activeChapterId);
   const isActiveCompleted = activeChapter?.status === 'completed';
 
   return (

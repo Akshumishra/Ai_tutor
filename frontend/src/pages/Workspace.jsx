@@ -139,9 +139,42 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
       const { canvasData } = parseCurriculumText(lastMsg.text);
       if (canvasData?.length > 0) setCanvasContent(canvasData);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats]);
 
   // Resume stream on refresh
+  const processStream = async (response) => {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+    let done = false;
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      if (value) buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      let textToAdd = '';
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const dataStr = line.slice(6).trim();
+          if (!dataStr) continue;
+          try {
+            const parsed = JSON.parse(dataStr);
+            if (parsed.type === 'text') textToAdd += parsed.data;
+          } catch (error) { console.error(error); }
+        }
+      }
+      if (textToAdd) {
+        setChats(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { ...updated[updated.length - 1], text: updated[updated.length - 1].text + textToAdd };
+          return updated;
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     if (!topicId) return;
     const lastMsg = chats[chats.length - 1];
@@ -164,39 +197,9 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
             });
         });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats, topicId]);
 
-  const processStream = async (response) => {
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let buffer = '';
-    let done = false;
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      if (value) buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-      let textToAdd = '';
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const dataStr = line.slice(6).trim();
-          if (!dataStr) continue;
-          try {
-            const parsed = JSON.parse(dataStr);
-            if (parsed.type === 'text') textToAdd += parsed.data;
-          } catch {}
-        }
-      }
-      if (textToAdd) {
-        setChats(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { ...updated[updated.length - 1], text: updated[updated.length - 1].text + textToAdd };
-          return updated;
-        });
-      }
-    }
-  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -225,11 +228,11 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
       try {
         const curRes = await fetch(`http://localhost:8000/api/dashboard/curriculum/${topicId}`);
         if (curRes.ok) { const d = await curRes.json(); if (d?.length > 0) setCanvasContent(d); }
-      } catch {}
+      } catch (error) { console.error(error); }
       try {
         const wfRes = await fetch(`http://localhost:8000/api/dashboard/workflow-status/${topicId}`);
         if (wfRes.ok) { const wf = await wfRes.json(); if (wf['curriculum'] === 'completed') setIsCompleted(true); }
-      } catch {}
+      } catch (error) { console.error(error); }
     } catch (err) {
       console.error('Curriculum error:', err);
       setChats(prev => {
