@@ -10,7 +10,8 @@ import {
   BrainCircuit,
   Settings,
   LogOut,
-  Search
+  Search,
+  Trash2
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
@@ -62,6 +63,25 @@ export const Dashboard = () => {
       navigate('/login');
   };
 
+  const handleDeleteCourse = async (courseId, e) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this journey? This action cannot be undone.")) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/dashboard/topics/${courseId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setCourses(prev => prev.filter(c => c.id !== courseId));
+      } else {
+        console.error("Failed to delete topic");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
   if (!user) return null;
 
   return (
@@ -72,7 +92,7 @@ export const Dashboard = () => {
            <BrainCircuit className="w-8 h-8 text-gold-500" />
            <span className="ml-3 font-bold text-xl hidden md:block tracking-tight">AI<span className="text-gold-500">Tutor</span></span>
         </div>
-        
+{/*         
         <nav className="p-4 space-y-2 mt-4">
           <button className="flex items-center w-full p-3 rounded-xl bg-gold-500/10 text-gold-500 border border-gold-500/20 shadow-lg shadow-gold-500/5">
             <GraduationCap className="w-6 h-6 shrink-0" />
@@ -82,7 +102,7 @@ export const Dashboard = () => {
             <Settings className="w-6 h-6 shrink-0 group-hover:rotate-45 transition-transform" />
             <span className="ml-3 font-medium hidden md:block">Settings</span>
           </button>
-        </nav>
+        </nav> */}
 
         <div className="absolute bottom-8 left-0 w-full px-4">
            <button 
@@ -144,7 +164,7 @@ export const Dashboard = () => {
                 </div>
                 <p className="text-gray-400 font-medium mb-1">Learning Time</p>
                 <h3 className="text-4xl font-bold text-white">
-                  {courses.reduce((acc, c) => acc + (c.completed_count || 0) * 0.5, 0).toFixed(1)} Hrs
+                  {courses.reduce((acc, c) => acc + ((c.learning_time_seconds || 0) / 3600), 0).toFixed(1)} Hrs
                 </h3>
              </div>
           </div>
@@ -188,9 +208,18 @@ export const Dashboard = () => {
                     <div className="p-3 bg-gold-500/10 rounded-2xl border border-gold-500/20">
                         <BookOpen className="w-6 h-6 text-gold-500" />
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${course.status === 'completed' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gold-500/10 text-gold-400 border border-gold-500/20'}`}>
-                        {course.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${course.status === 'completed' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-gold-500/10 text-gold-400 border border-gold-500/20'}`}>
+                            {course.status}
+                        </span>
+                        <button 
+                          onClick={(e) => handleDeleteCourse(course.id, e)}
+                          className="p-1.5 hover:bg-red-500/10 rounded-lg text-gray-500 hover:text-red-400 transition-colors"
+                          title="Delete Journey"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
                   </div>
                   
                   <h3 className="text-xl font-bold text-white mb-2 leading-tight group-hover:text-gold-500 transition-colors">

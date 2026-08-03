@@ -18,22 +18,12 @@ export const Landing = () => {
         </div>
         <div className="flex gap-4">
           <Link to="/login">
-            <Button variant="ghost">Log In</Button>
-          </Link>
-          <Link to="/register">
-            <Button variant="primary">Get Started</Button>
+            <Button variant="primary">Log In</Button>
           </Link>
         </div>
       </nav>
 
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4 relative z-10 py-20">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-dark-800 border border-dark-700 text-gold-400 text-sm font-medium mb-8">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-gold-500"></span>
-          </span>
-          AI Agents v2.0 Live
-        </div>
         
         <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-8 max-w-4xl leading-tight">
           Master any subject with your <br className="hidden md:block"/>
@@ -47,12 +37,7 @@ export const Landing = () => {
         <div className="flex flex-col sm:flex-row gap-4 mb-20">
           <Link to="/register">
             <Button variant="primary" className="text-lg py-4 px-8 w-full sm:w-auto">
-              Start Learning for Free <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-          </Link>
-          <Link to="/app">
-            <Button variant="outline" className="text-lg py-4 px-8 w-full sm:w-auto">
-              Try Workspace Demo
+              Start Learning <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </Link>
         </div>
