@@ -120,12 +120,10 @@ class Agent:
 
             with self._call_llm(chat_history=chat_history, stream=True) as stream:
                 for event in stream:
-                    #  Normal text streaming
                     if event.type == "response.output_text.delta":
                         final_text += event.delta
                         yield {"type": "text", "data": event.delta}
 
-                    #  IMPLICIT tool start
                     elif event.type == "response.output_item.added":
                         item = event.item
 
@@ -136,11 +134,9 @@ class Agent:
                             }
                             tool_args_buffer = ""
 
-                    #  Tool arguments streaming
                     elif event.type == "response.function_call_arguments.delta":
                         tool_args_buffer += event.delta or ""
 
-                    #  IMPLICIT tool completion
                     elif event.type == "response.function_call_arguments.done":
                         if current_tool:
                             try:
@@ -183,7 +179,6 @@ class Agent:
                             current_tool = None
                             tool_args_buffer = ""
 
-                    #  Response finished
                     elif event.type == "response.completed":
                         yield {
                             "type": "final",
@@ -193,17 +188,18 @@ class Agent:
                             },
                         }
 
-    async def _call_llm_async(self, chat_history: List[dict], stream: bool = False):
-        return await self.client_async.responses.create(
+    async def _call_llm_async(self, chat_history: List[dict]):
+        """Returns an async streaming context manager from the AsyncOpenAI client."""
+        return self.client_async.responses.stream(
             model=self.model,
             temperature=self.temperature,
             input=chat_history,
             tools=[tool.schema() for tool in self.tools.values()],
             tool_choice="auto",
-            stream=stream,
         )
 
     async def astream(self, chat_history):
+        import asyncio
         if chat_history is None:
             chat_history = []
         chat_history = self._format_chat_history(chat_history)
@@ -217,9 +213,7 @@ class Agent:
             current_tool = None
             tool_args_buffer = ""
 
-            async with self._call_llm_async(
-                chat_history=chat_history, stream=True
-            ) as stream:
+            async with await self._call_llm_async(chat_history) as stream:
                 async for event in stream:
                     if event.type == "response.output_text.delta":
                         final_text += event.delta
@@ -237,28 +231,34 @@ class Agent:
                         tool_args_buffer += event.delta or ""
 
                     elif event.type == "response.function_call_arguments.done":
-                        args = json.loads(tool_args_buffer or "{}")
-                        result = self._execute_tool(current_tool["name"], args)
+                        if current_tool:
+                            args = json.loads(tool_args_buffer or "{}")
+                            result = await asyncio.to_thread(
+                                self._execute_tool, current_tool["name"], args
+                            )
+                            self.on_tool_result(current_tool["name"], args, result)
 
-                        tool_input = {
-                            "type": "function_call",
-                            "name": current_tool["name"],
-                            "arguments": tool_args_buffer,
-                            "call_id": current_tool["call_id"],
-                        }
+                            tool_input = {
+                                "type": "function_call",
+                                "name": current_tool["name"],
+                                "arguments": tool_args_buffer or "{}",
+                                "call_id": current_tool["call_id"],
+                            }
 
-                        tool_output = {
-                            "type": "function_call_output",
-                            "call_id": current_tool["call_id"],
-                            "output": json.dumps(result),
-                        }
+                            tool_output = {
+                                "type": "function_call_output",
+                                "call_id": current_tool["call_id"],
+                                "output": json.dumps(result),
+                            }
 
-                        chat_history.append(tool_input)
-                        chat_history.append(tool_output)
+                            chat_history.append(tool_input)
+                            chat_history.append(tool_output)
+                            tool_calls.append({"input": tool_input, "output": tool_output})
 
-                        tool_calls.append({"input": tool_input, "output": tool_output})
+                            yield {"type": "tool_call", "data": tool_calls[-1]}
 
-                        yield {"type": "tool_call", "data": tool_calls[-1]}
+                            current_tool = None
+                            tool_args_buffer = ""
 
                     elif event.type == "response.completed":
                         yield {

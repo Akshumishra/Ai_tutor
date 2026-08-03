@@ -13,10 +13,28 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class VerifyResetOTPRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp_code: str
+    new_password: str = Field(..., min_length=8)
+    confirm_password: str
+
 
 class OTPVerify(BaseModel):
     email: EmailStr
     otp_code: str
+
+
+class GoogleLogin(BaseModel):
+    credential: Optional[str] = None
+    code: Optional[str] = None
 
 
 class Token(BaseModel):

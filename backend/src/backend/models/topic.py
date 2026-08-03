@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, Enum, Text
+from sqlalchemy import Column, String, ForeignKey, Enum, Text, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -19,6 +19,7 @@ class Topic(BaseModel):
         default=Status.PENDING.value
     )
     user_summary = Column(Text, nullable=False)
+    learning_time_seconds = Column(Integer, default=0, nullable=False)
 
     user = relationship("User", back_populates="topics")
     chapters = relationship(

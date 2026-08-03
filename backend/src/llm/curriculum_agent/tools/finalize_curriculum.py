@@ -1,10 +1,13 @@
 import logging
 from uuid import UUID
+
 from src.backend.models.topic import Topic
 from src.backend.db.database import SessionLocal
 from src.llm.agent_core.args_schema import ArgsSchema as Args
 from src.llm.agent_core.tool import Tool
 from src.backend.enums.status import Status
+from src.backend.models.workflow_status import WorkflowStatus
+from src.backend.enums.workflow_stage import WorkflowStage
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +28,7 @@ def make_finalize_curriculum_tool(topic_id_fixed: str):
             try:
                 topic_uuid = UUID(topic_id_fixed)
             except (ValueError, TypeError):
-                # If topic_id is a placeholder, try to find it in the DB (agent should have updated it by now, but just in case)
-                # Actually, if the agent updated its self.topic_id, this shouldn't happen.
-                # But we'll try to find any pending topic for the user if it's a new journey.
-                topic = db.query(Topic).filter(Topic.status == Status.PENDING.value).order_by(Topic.created_at.desc()).first()
-                if topic:
-                    topic_uuid = topic.id
+                return {"status": "error", "message": "Topic not found or invalid ID."}
             
             if not topic_uuid:
                  return {"status": "error", "message": "Topic not found or invalid ID."}
@@ -41,10 +39,6 @@ def make_finalize_curriculum_tool(topic_id_fixed: str):
             
             topic.status = Status.COMPLETED.value
             
-            # Update workflow status
-            from src.backend.models.workflow_status import WorkflowStatus
-            from src.backend.enums.workflow_stage import WorkflowStage
-            
             ws = db.query(WorkflowStatus).filter(
                 WorkflowStatus.topic_id == topic_uuid,
                 WorkflowStatus.stage == WorkflowStage.CURRICULUM
@@ -52,8 +46,6 @@ def make_finalize_curriculum_tool(topic_id_fixed: str):
             if not ws:
                 ws = WorkflowStatus(topic_id=topic_uuid, stage=WorkflowStage.CURRICULUM)
                 db.add(ws)
-            
-            # Use Enum member for safety
             ws.status = Status.COMPLETED
             
             db.commit()

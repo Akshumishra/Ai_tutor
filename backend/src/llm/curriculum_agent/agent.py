@@ -30,7 +30,7 @@ class CurriculumAgent(Agent):
         self.saved_chapters = set()
         self.save_failures = 0
 
-    def run(self, user_input: str, chat_history: list[dict] = None):
+    def arun(self, user_input: str, chat_history: list[dict] = None):
         self.add_tool(make_upsert_curriculum_tool(self.user_id, self.topic_id))
         self.add_tool(make_get_curriculum_tool(self.topic_id))
         self.add_tool(make_web_search_tool())
@@ -39,7 +39,7 @@ class CurriculumAgent(Agent):
             raise ValueError(CurriculumConstants.NO_INPUT_ERROR)
         user_input={"role":"user", "content":user_input}
         chat_history.append(user_input)
-        return self.stream(chat_history)
+        return self.astream(chat_history)
                 
 
     def on_tool_result(self, tool_name: str, args: dict, result: dict):
@@ -50,11 +50,9 @@ class CurriculumAgent(Agent):
         if status == "success":
             self.saved_chapters.add(chapter_number)
             self.save_failures = 0
-            # Update topic_id if a real UUID was generated/returned
             new_id = result.get("topic_id")
             if new_id and new_id != self.topic_id:
                 self.topic_id = new_id
-                # Re-add tools with the updated ID for consistency
                 self.add_tool(make_upsert_curriculum_tool(self.user_id, self.topic_id))
                 self.add_tool(make_finalize_curriculum_tool(self.topic_id))
                 self.add_tool(make_get_curriculum_tool(self.topic_id))

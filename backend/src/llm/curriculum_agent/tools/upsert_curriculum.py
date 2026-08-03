@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class UpsertCurriculumArgs:
     args = [
-        ("topic", Args(type=str, description="The title of topic")),
+        ("topic", Args(type=str, description="A meaningful and descriptive title for the overall curriculum course (e.g. 'Advanced Python Web Development'). Do NOT use generic names like 'New Journey'.")),
         (
             "chapter_number",
             Args(type=int, description="Chapter sequence number"),
@@ -60,18 +60,11 @@ def make_upsert_curriculum_tool(user_id: str, topic_id: str):
         try:
             user_uuid = UUID(user_id)
             
-            # Robust topic ID handling
-            topic_uuid = None
             try:
                 topic_uuid = UUID(topic_id)
             except (ValueError, TypeError):
-                logger.info(f"Placeholder topic_id detected: {topic_id}. Checking for existing topic by title.")
-                # If topic_id is a placeholder, check if we already created a topic with this title for this user
-                existing_topic = db.query(Topic).filter(Topic.user_id == user_uuid, Topic.title == topic).first()
-                if existing_topic:
-                    topic_uuid = existing_topic.id
-                else:
-                    topic_uuid = uuid.uuid4()
+                logger.error(f"Invalid topic_id provided: {topic_id}")
+                return {"status": "error", "message": "Invalid topic_id format"}
             
             logger.debug("Checking for existing topic")
 
@@ -82,21 +75,12 @@ def make_upsert_curriculum_tool(user_id: str, topic_id: str):
                     "Existing topic found, updating metadata",
                     extra={"topic_id": str(existing_topic.id)},
                 )
+                existing_topic.title = topic
+                existing_topic.user_summary = user_summary
                 topic_uuid = existing_topic.id
             else:
-                logger.info(
-                    "Creating new topic",
-                    extra={"topic_id": str(topic_uuid), "title": topic},
-                )
-                new_topic = Topic(
-                    id=topic_uuid,
-                    user_id=user_uuid,
-                    title=topic,
-                    status=Status.PENDING.value,
-                    user_summary=user_summary,
-                )
-                db.add(new_topic)
-                db.flush() # Ensure it's in the session so chapters can link to it
+                logger.error(f"Topic {topic_uuid} not found in database. Cannot upsert curriculum.")
+                return {"status": "error", "message": "Topic not found"}
 
             logger.debug("Checking for existing chapter")
 

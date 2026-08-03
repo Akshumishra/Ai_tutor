@@ -58,29 +58,6 @@ def make_update_status(chapter_id: str):
 
             elif action == "complete":
                 chapter_plan.status = Status.COMPLETED.value
-
-                last_chapter_plan_sequence = (
-                    db.query(ChapterPlan.sequence)
-                    .filter(ChapterPlan.chapter_id == chapter.id)
-                    .order_by(ChapterPlan.sequence.desc())
-                    .limit(1)
-                    .scalar()
-                )
-
-                if sequence == last_chapter_plan_sequence:
-                    chapter.status = Status.COMPLETED.value
-
-                    last_chapter_sequence = (
-                        db.query(Chapter.sequence)
-                        .filter(Chapter.topic_id == topic.id)
-                        .order_by(Chapter.sequence.desc())
-                        .limit(1)
-                        .scalar()
-                    )
-
-                    if chapter.sequence == last_chapter_sequence:
-                        topic.status = Status.COMPLETED.value
-
             else:
                 raise ValueError("Invalid action")
             db.commit()

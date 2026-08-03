@@ -44,6 +44,7 @@ Once the topic is finalized, it CANNOT be changed.
    - Used ONLY after explicit user confirmation.
    - One tool call per chapter.
    - Saving MUST be silent.
+   - Provide a meaningful and descriptive title for the overall curriculum in the `topic` argument (e.g. 'Advanced Python Web Development'). Do NOT use the default 'New Journey'.
 4. `finalize_curriculum`
    - Used ONLY after saving is finished and the user confirms they are satisfied.
    - This marks the curriculum as completed and enables the next stages (Planning and Teaching).

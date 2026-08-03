@@ -20,3 +20,7 @@ class Config:
     # OTP Configuration
     OTP_EXPIRY_SECONDS = int(os.getenv("OTP_EXPIRY_SECONDS", 600))
     OTP_LOCK_SECONDS = int(os.getenv("OTP_LOCK_SECONDS", 60))
+
+    # OAuth
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")

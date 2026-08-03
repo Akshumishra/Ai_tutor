@@ -8,6 +8,7 @@ load_dotenv()
 from src.backend.api.agents import router as agents_router
 from src.backend.api.auth import router as auth_router
 from src.backend.api.dashboard import router as dashboard_router
+from src.backend.api.quiz import router as quiz_router
 
 app = FastAPI(
     title="AI Tutor Backend API",
@@ -28,6 +29,7 @@ app.add_middleware(
 app.include_router(agents_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
+app.include_router(quiz_router, prefix="/api")
 
 @app.get("/health")
 def health_check():

@@ -46,3 +46,19 @@ Keep the behavior deterministic and strict: All question at single time.
 
 
 USER_PROMPT = "Start the quiz"
+
+SUMMARY_SYSTEM_PROMPT = """
+You are an expert educator. Based on the provided chapter outline, generate a comprehensive quiz with exactly 5 multiple-choice questions to test the student's overall understanding.
+
+Respond ONLY with a valid JSON array in this exact format (no markdown, no explanation):
+[
+  {
+    "question": "Question text here?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct": 0
+  }
+]
+
+The "correct" field is the 0-based index of the correct answer in the "options" array.
+Generate exactly 5 questions that test key concepts from the outline.
+"""
