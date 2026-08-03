@@ -50,6 +50,9 @@ jobs:
         run: bandit -r . -ll -ii
 
       - name: Run Tests
+        env:
+          DATABASE_URL: sqlite:///./test.db
+          GEMINI_API_KEY: "dummy_key_for_tests"
         run: |
           if [ -d "tests" ]; then pytest tests/; fi
 
