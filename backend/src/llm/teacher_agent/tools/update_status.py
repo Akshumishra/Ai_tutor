@@ -60,8 +60,19 @@ def make_update_status(chapter_id: str):
                 chapter_plan.status = Status.COMPLETED.value
             else:
                 raise ValueError("Invalid action")
+            
             db.commit()
-            return f"{action} chapter_plan {chapter_plan.title}"
+            
+            if action == "complete":
+                total_outlines = db.query(ChapterPlan).filter(ChapterPlan.chapter_id == chapter_uuid).count()
+                remaining = total_outlines - sequence
+                
+                if remaining > 0:
+                    return f"Action 'complete' successful for '{chapter_plan.title}'. There are {remaining} outlines remaining in this chapter. You may now proceed to sequence {sequence + 1}."
+                else:
+                    return f"Action 'complete' successful for '{chapter_plan.title}'. There are 0 outlines remaining. THIS WAS THE FINAL OUTLINE. Do NOT attempt to fetch any more outlines. Congratulate the user and instruct them to click 'End Chapter Quiz'."
+            
+            return f"Action '{action}' successful for '{chapter_plan.title}'"
 
         except Exception as e:
             db.rollback()

@@ -30,6 +30,10 @@ def make_get_outline_content(chapter_id: str):
                 )
                 .scalar()
             )
+            
+            if not result:
+                return f"Error: Sequence {sequence} does not exist. You have reached the end of the chapter. Please congratulate the user and end the chapter."
+            
             return result
 
         except Exception as e:
@@ -60,6 +64,10 @@ def get_outline_content(sequence: int, chapter_id: str) -> str:
             )
             .scalar()
         )
+        
+        if not result:
+            return f"Error: Sequence {sequence} does not exist. You have reached the end of the chapter. Please congratulate the user and end the chapter."
+            
         return result
 
     except Exception as e:
