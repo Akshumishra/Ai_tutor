@@ -181,3 +181,23 @@ jobs:
           registryPassword: ${{ secrets.ACR_PASSWORD }}
           targetPort: 80
           ingress: external
+
+      - name: Configure Backend Compute & Scaling
+        run: |
+          az containerapp update \
+            --name aitutor-backend-app \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --cpu 1.0 \
+            --memory 2.0Gi \
+            --min-replicas 1 \
+            --max-replicas 5
+
+      - name: Configure Frontend Compute & Scaling
+        run: |
+          az containerapp update \
+            --name aitutor-frontend-app \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --cpu 0.5 \
+            --memory 1.0Gi \
+            --min-replicas 1 \
+            --max-replicas 5
