@@ -15,8 +15,8 @@ env:
   ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
   BACKEND_IMAGE_NAME: aitutor-backend
   FRONTEND_IMAGE_NAME: aitutor-frontend
-  AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
-  AZURE_CONTAINER_APP_ENV: ${{ secrets.AZURE_CONTAINER_APP_ENV }}
+  AZURE_RESOURCE_GROUP: AiTutor
+  AZURE_CONTAINER_APP_ENV: aitutor-env
 
 jobs:
   test-and-scan-backend:
