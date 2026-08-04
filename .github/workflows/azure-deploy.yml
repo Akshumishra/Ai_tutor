@@ -151,7 +151,8 @@ jobs:
         with:
           resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
           containerAppName: aitutor-backend-app
-          environment: ${{ env.AZURE_CONTAINER_APP_ENV }}
+          containerAppEnvironment: ${{ env.AZURE_CONTAINER_APP_ENV }}
+          location: centralindia
           imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}
           registryUrl: ${{ secrets.ACR_LOGIN_SERVER }}
           registryUsername: ${{ secrets.ACR_USERNAME }}
@@ -165,7 +166,8 @@ jobs:
         with:
           resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
           containerAppName: aitutor-frontend-app
-          environment: ${{ env.AZURE_CONTAINER_APP_ENV }}
+          containerAppEnvironment: ${{ env.AZURE_CONTAINER_APP_ENV }}
+          location: centralindia
           imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
           registryUrl: ${{ secrets.ACR_LOGIN_SERVER }}
           registryUsername: ${{ secrets.ACR_USERNAME }}
