@@ -125,7 +125,10 @@ jobs:
 
       - name: Build Frontend Image
         run: |
-          docker build ./frontend -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:${{ github.sha }} -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:latest
+          docker build ./frontend \
+            --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:${{ github.sha }} \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:latest
 
       - name: Run Trivy vulnerability scanner on Frontend
         uses: aquasecurity/trivy-action@master
