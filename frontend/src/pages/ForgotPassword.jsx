@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { ArrowLeft, BrainCircuit, Check, X } from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api`;
+const API = import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api`;
 
 export const ForgotPassword = () => {
   const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Reset, 4: Success

@@ -20,7 +20,7 @@ export const QuizPanel = ({ quiz, onPass, onClose }) => {
     setLoading(true);
     try {
       const answers = quiz.questions.map((_, i) => selectedAnswers[i]);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/quiz/submit`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/quiz/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
