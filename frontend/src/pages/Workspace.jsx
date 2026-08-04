@@ -98,8 +98,8 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
       if (!topicId || topicId.startsWith('topic_')) return;
       try {
         const [histRes, curRes] = await Promise.all([
-          fetch(`http://localhost:8000/api/agents/chat-history?topic_id=${topicId}&agent_type=curriculum`, { signal: controller.signal }),
-          fetch(`http://localhost:8000/api/dashboard/curriculum/${topicId}`, { signal: controller.signal }),
+          fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/agents/chat-history?topic_id=${topicId}&agent_type=curriculum`, { signal: controller.signal }),
+          fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/curriculum/${topicId}`, { signal: controller.signal }),
         ]);
         if (histRes.ok) {
           const history = await histRes.json();
@@ -120,7 +120,7 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
     // Also check if already completed
     (async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/dashboard/workflow-status/${topicId}`, { signal: controller.signal });
+        const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/workflow-status/${topicId}`, { signal: controller.signal });
         if (res.ok) {
           const wf = await res.json();
           if (wf['curriculum'] === 'completed') setIsCompleted(true);
@@ -180,12 +180,12 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
     const lastMsg = chats[chats.length - 1];
     if (lastMsg?.status === 'generating' && lastMsg.id && !reconnectingRef.current) {
       reconnectingRef.current = true;
-      fetch(`http://localhost:8000/api/agents/reconnect/${lastMsg.id}`)
+      fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/agents/reconnect/${lastMsg.id}`)
         .then(res => processStream(res))
         .catch(err => console.error(err))
         .finally(() => {
           reconnectingRef.current = false;
-          fetch(`http://localhost:8000/api/agents/chat-history?topic_id=${topicId}&agent_type=curriculum`)
+          fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/agents/chat-history?topic_id=${topicId}&agent_type=curriculum`)
             .then(res => res.json())
             .then(history => {
               if (history?.length > 0) {
@@ -212,7 +212,7 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
     setInputVal('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/agents/curriculum', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/agents/curriculum`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -226,11 +226,11 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
 
       // After stream ends, reload curriculum and status
       try {
-        const curRes = await fetch(`http://localhost:8000/api/dashboard/curriculum/${topicId}`);
+        const curRes = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/curriculum/${topicId}`);
         if (curRes.ok) { const d = await curRes.json(); if (d?.length > 0) setCanvasContent(d); }
       } catch (error) { console.error(error); }
       try {
-        const wfRes = await fetch(`http://localhost:8000/api/dashboard/workflow-status/${topicId}`);
+        const wfRes = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/workflow-status/${topicId}`);
         if (wfRes.ok) { const wf = await wfRes.json(); if (wf['curriculum'] === 'completed') setIsCompleted(true); }
       } catch (error) { console.error(error); }
     } catch (err) {
@@ -247,7 +247,7 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
     // Step 1: Sync canvas chapters to DB (in case the agent didn't call upsert_curriculum_tool)
     if (canvasContent && canvasContent.length > 0) {
       try {
-        await fetch(`http://localhost:8000/api/dashboard/curriculum/${topicId}/sync-chapters`, {
+        await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/curriculum/${topicId}/sync-chapters`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chapters: canvasContent.map(c => ({ module: c.module || c.title || '', topics: c.topics || [] })) }),
@@ -257,7 +257,7 @@ const CurriculumStage = ({ topicId, userId, onComplete }) => {
     // Step 2: Mark topic as completed
     if (!isCompleted) {
       try {
-        await fetch(`http://localhost:8000/api/dashboard/curriculum/${topicId}/finalize`, { method: 'POST' });
+        await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/curriculum/${topicId}/finalize`, { method: 'POST' });
       } catch (e) { console.error(e); }
     }
     onComplete();
@@ -368,7 +368,7 @@ export const Workspace = () => {
 
     (async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/dashboard/topics/create', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/topics/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: userId }),
@@ -403,7 +403,7 @@ export const Workspace = () => {
 
       try {
         const res = await fetch(
-          `http://localhost:8000/api/dashboard/workflow-status/${topicId}`,
+          `${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/workflow-status/${topicId}`,
           { signal: controller.signal }
         );
         if (res.ok) {
@@ -451,7 +451,7 @@ export const Workspace = () => {
 
     // Ping the backend every 30 seconds to accumulate learning time
     const interval = setInterval(() => {
-      fetch(`http://localhost:8000/api/dashboard/topics/${topicId}/time`, {
+      fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/topics/${topicId}/time`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ delta_seconds: 30 })

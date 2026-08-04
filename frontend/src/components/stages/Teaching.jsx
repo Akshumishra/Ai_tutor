@@ -3,7 +3,7 @@ import { Lock, CheckCircle, MessageSquare, Bot, User, Send, Award, Zap, ChevronR
 import { Button } from '../ui/Button';
 import { QuizPanel } from '../ui/QuizPanel';
 
-const API = 'http://localhost:8000/api';
+const API = `${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api`;
 
 export const Teaching = ({ topicId, userId }) => {
   const [chapters, setChapters] = useState([]);

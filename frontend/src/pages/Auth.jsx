@@ -19,7 +19,7 @@ export const Auth = ({ type = 'login' }) => {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch('http://localhost:8000/api/auth/google', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: codeResponse.code })
@@ -58,7 +58,7 @@ export const Auth = ({ type = 'login' }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:8000/api/auth/send-otp', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, otp_code: "" })
@@ -79,7 +79,7 @@ export const Auth = ({ type = 'login' }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:8000/api/auth/verify-otp', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, otp_code: formData.otp })
@@ -100,7 +100,7 @@ export const Auth = ({ type = 'login' }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:8000/api/auth/register', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -125,7 +125,7 @@ export const Auth = ({ type = 'login' }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:8000/api/auth/login', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

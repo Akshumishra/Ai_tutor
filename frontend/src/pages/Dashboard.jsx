@@ -36,7 +36,7 @@ export const Dashboard = () => {
 
     const fetchCourses = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/dashboard/courses?user_id=${user.user_id}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/courses?user_id=${user.user_id}`);
         if (response.ok) {
           const data = await response.json();
           setCourses(data);
@@ -68,7 +68,7 @@ export const Dashboard = () => {
     if (!window.confirm("Are you sure you want to delete this journey? This action cannot be undone.")) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/api/dashboard/topics/${courseId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/topics/${courseId}`, {
         method: 'DELETE'
       });
       if (res.ok) {

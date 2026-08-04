@@ -20,7 +20,7 @@ export const Planning = ({ topicId, onComplete }) => {
 
   const fetchChapters = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/dashboard/chapters/${topicId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/chapters/${topicId}`);
       if (res.ok) {
         const data = await res.json();
         setChapters(data);
@@ -30,7 +30,7 @@ export const Planning = ({ topicId, onComplete }) => {
 
   const fetchWorkflowStatus = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/dashboard/workflow-status/${topicId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/workflow-status/${topicId}`);
       if (res.ok) {
         const data = await res.json();
         setWorkflowStatus(data);
@@ -71,7 +71,7 @@ export const Planning = ({ topicId, onComplete }) => {
 
     // Step 1: Ensure topic is finalized (idempotent — safe to call even if already done)
     try {
-      await fetch(`http://localhost:8000/api/dashboard/curriculum/${topicId}/finalize`, { method: 'POST' });
+      await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/curriculum/${topicId}/finalize`, { method: 'POST' });
       setLogMessages(prev => [...prev, 'Curriculum confirmed as finalized.', 'Planner Agent starting...']);
     } catch (e) { console.error(e);
       setLogMessages(prev => [...prev, 'Could not confirm finalization — proceeding anyway...']);
@@ -79,7 +79,7 @@ export const Planning = ({ topicId, onComplete }) => {
 
     // Step 2: Trigger the planner agent
     try {
-      const res = await fetch('http://localhost:8000/api/agents/planner', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/agents/planner`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: session?.user_id, topic_id: topicId }),
@@ -109,8 +109,8 @@ export const Planning = ({ topicId, onComplete }) => {
     pollingRef.current = setInterval(async () => {
       try {
         const [chapRes, wfRes] = await Promise.all([
-          fetch(`http://localhost:8000/api/dashboard/chapters/${topicId}`),
-          fetch(`http://localhost:8000/api/dashboard/workflow-status/${topicId}`),
+          fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/chapters/${topicId}`),
+          fetch(`${import.meta.env.VITE_API_URL || '${import.meta.env.VITE_API_URL || 'http://localhost:8000'}'}/api/dashboard/workflow-status/${topicId}`),
         ]);
         if (chapRes.ok) {
           const chaps = await chapRes.json();

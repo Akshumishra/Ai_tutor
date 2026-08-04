@@ -127,6 +127,7 @@ jobs:
         run: |
           docker build ./frontend \
             --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
             -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:${{ github.sha }} \
             -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:latest
 
