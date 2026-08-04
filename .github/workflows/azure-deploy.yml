@@ -20,6 +20,7 @@ env:
 
 jobs:
   test-and-scan-backend:
+    name: Backend Tests & SAST (Bandit, Semgrep)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 bandit pytest
+          pip install flake8 bandit pytest semgrep
           if [ -f requirments.txt ]; then pip install -r requirments.txt; fi
 
       - name: Lint with flake8
@@ -49,6 +50,9 @@ jobs:
       - name: Security Scan with Bandit
         run: bandit -r . -ll -ii
 
+      - name: Security Scan with Semgrep
+        run: semgrep scan --config auto .
+
       - name: Run Tests
         env:
           DATABASE_URL: sqlite:///./test.db
@@ -59,6 +63,7 @@ jobs:
           if [ -d "tests" ]; then pytest tests/; fi
 
   test-and-scan-frontend:
+    name: Frontend Tests & Audit (NPM Audit)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -84,6 +89,7 @@ jobs:
         run: npm audit --audit-level=critical || true
 
   build-and-push:
+    name: Build & Container Scan (Trivy)
     needs: [test-and-scan-backend, test-and-scan-frontend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -137,6 +143,7 @@ jobs:
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:latest
 
   deploy-to-aca:
+    name: Deploy to Azure Container Apps
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
