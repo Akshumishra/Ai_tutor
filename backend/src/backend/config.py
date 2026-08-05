@@ -8,7 +8,7 @@ class Config:
     DATABASE_URL = os.getenv("DATABASE_URL")
     
     # Redis Configuration
-    REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_URL = os.getenv("REDIS_URL") or "redis://localhost:6379/0"
     
     # SMTP Configuration
     SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
