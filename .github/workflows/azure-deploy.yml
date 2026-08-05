@@ -123,11 +123,26 @@ jobs:
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/$BACKEND_IMAGE_NAME:${{ github.sha }}
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/$BACKEND_IMAGE_NAME:latest
 
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Fetch Backend URL
+        run: |
+          echo "Fetching backend URL from Azure..."
+          FQDN=$(az containerapp show --name aitutor-backend-app --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv || echo "")
+          if [ -n "$FQDN" ]; then
+            echo "DYNAMIC_API_URL=https://$FQDN" >> $GITHUB_ENV
+          else
+            echo "DYNAMIC_API_URL=${{ secrets.VITE_API_URL }}" >> $GITHUB_ENV
+          fi
+
       - name: Build Frontend Image
         run: |
           docker build ./frontend \
             --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
+            --build-arg VITE_API_URL=${{ env.DYNAMIC_API_URL }} \
             -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:${{ github.sha }} \
             -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:latest
 
