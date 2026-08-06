@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
 import uvicorn
 from dotenv import load_dotenv
 
@@ -16,13 +17,28 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Set up CORS middleware
+# Set up CORS middleware.
+# ALLOWED_ORIGINS env var should be a comma-separated list of allowed frontend origins.
+# Example: "https://aitutor-frontend-app.xxx.azurecontainerapps.io"
+# If not set, defaults to common localhost ports for local development.
+# NOTE: allow_credentials=True requires explicit origins (not "*") per the CORS spec.
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = (
+    [o.strip() for o in _raw_origins.split(",") if o.strip()]
+    or [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:80",
+        "http://localhost",
+    ]
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins, adjust if needed for production
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Mount the routers
