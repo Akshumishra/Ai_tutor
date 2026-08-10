@@ -36,6 +36,7 @@ allowed_origins = (
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.azurecontainerapps\.io",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
