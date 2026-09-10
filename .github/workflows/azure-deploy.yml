@@ -3,11 +3,10 @@ name: CI/CD Pipeline to Azure Container Apps
 on:
   push:
     branches:
-      - main
-      - feat/CI-CD-pipeline
+      - development
   pull_request:
     branches:
-      - main
+      - development
 
 env:
   ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
