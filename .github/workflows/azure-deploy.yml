@@ -1,0 +1,221 @@
+name: CI/CD Pipeline to Azure Container Apps
+
+on:
+  push:
+    branches:
+      - main
+      - feat/CI-CD-pipeline
+  pull_request:
+    branches:
+      - main
+
+env:
+  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+  ACR_USERNAME: ${{ secrets.ACR_USERNAME }}
+  ACR_PASSWORD: ${{ secrets.ACR_PASSWORD }}
+  BACKEND_IMAGE_NAME: aitutor-backend
+  FRONTEND_IMAGE_NAME: aitutor-frontend
+  AZURE_RESOURCE_GROUP: AiTutor
+  AZURE_CONTAINER_APP_ENV: aitutor-env
+
+jobs:
+  test-and-scan-backend:
+    name: Backend Tests & SAST (Bandit, Semgrep)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 bandit pytest semgrep
+          if [ -f requirments.txt ]; then pip install -r requirments.txt; fi
+
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings.
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Security Scan with Bandit
+        run: bandit -r . -ll -ii
+
+      - name: Security Scan with Semgrep
+        run: semgrep scan --config auto .
+
+      - name: Run Tests
+        env:
+          DATABASE_URL: sqlite:///./test.db
+          TAVILY_API_KEY: "dummy_tavily_key_for_tests"
+          OPENAI_API_KEY: "dummy_openai_key_for_tests"
+        run: |
+          if [ -d "tests" ]; then pytest tests/; fi
+
+  test-and-scan-frontend:
+    name: Frontend Tests & Audit (NPM Audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Linter
+        run: npm run lint
+
+      - name: Security Scan
+        run: npm audit --audit-level=critical || true
+
+  build-and-push:
+    name: Build & Container Scan (Trivy)
+    needs: [test-and-scan-backend, test-and-scan-frontend]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build Backend Image
+        run: |
+          docker build ./backend -t ${{ secrets.ACR_LOGIN_SERVER }}/$BACKEND_IMAGE_NAME:${{ github.sha }} -t ${{ secrets.ACR_LOGIN_SERVER }}/$BACKEND_IMAGE_NAME:latest
+          
+      - name: Run Trivy vulnerability scanner on Backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.ACR_LOGIN_SERVER }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+
+      - name: Push Backend Image
+        run: |
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/$BACKEND_IMAGE_NAME:${{ github.sha }}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/$BACKEND_IMAGE_NAME:latest
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Fetch Backend URL
+        run: |
+          echo "Fetching backend URL from Azure..."
+          FQDN=$(az containerapp show --name aitutor-backend-app --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv || echo "")
+          if [ -n "$FQDN" ]; then
+            echo "DYNAMIC_API_URL=https://$FQDN" >> $GITHUB_ENV
+          else
+            echo "DYNAMIC_API_URL=${{ secrets.VITE_API_URL }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build Frontend Image
+        run: |
+          docker build ./frontend \
+            --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+            --build-arg VITE_API_URL=${{ env.DYNAMIC_API_URL }} \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:${{ github.sha }} \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:latest
+
+      - name: Run Trivy vulnerability scanner on Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.ACR_LOGIN_SERVER }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'
+
+      - name: Push Frontend Image
+        run: |
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:${{ github.sha }}
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/$FRONTEND_IMAGE_NAME:latest
+
+  deploy-to-aca:
+    name: Deploy to Azure Container Apps
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Backend to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
+          containerAppName: aitutor-backend-app
+          containerAppEnvironment: ${{ env.AZURE_CONTAINER_APP_ENV }}
+          location: centralindia
+          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}
+          registryUrl: ${{ secrets.ACR_LOGIN_SERVER }}
+          registryUsername: ${{ secrets.ACR_USERNAME }}
+          registryPassword: ${{ secrets.ACR_PASSWORD }}
+          targetPort: 8000
+          ingress: external
+          environmentVariables: "DATABASE_URL=${{ secrets.DATABASE_URL }} REDIS_URL=${{ secrets.REDIS_URL }} OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }} SMTP_SERVER=${{ secrets.SMTP_SERVER }} SMTP_PORT=${{ secrets.SMTP_PORT }} SMTP_USERNAME=${{ secrets.SMTP_USERNAME }} SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }} EMAILS_FROM=${{ secrets.EMAILS_FROM }} GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }} OTP_EXPIRY_SECONDS=${{ secrets.OTP_EXPIRY_SECONDS }} OTP_LOCK_SECONDS=${{ secrets.OTP_LOCK_SECONDS }} LOG_LEVEL=${{ secrets.LOG_LEVEL }} ENABLE_QUERY_EXPANSION=${{ secrets.ENABLE_QUERY_EXPANSION }}"
+
+      - name: Deploy Frontend to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
+          containerAppName: aitutor-frontend-app
+          containerAppEnvironment: ${{ env.AZURE_CONTAINER_APP_ENV }}
+          location: centralindia
+          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
+          registryUrl: ${{ secrets.ACR_LOGIN_SERVER }}
+          registryUsername: ${{ secrets.ACR_USERNAME }}
+          registryPassword: ${{ secrets.ACR_PASSWORD }}
+          targetPort: 80
+          ingress: external
+
+      - name: Configure Backend Compute & Scaling
+        run: |
+          az containerapp update \
+            --name aitutor-backend-app \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --cpu 1.0 \
+            --memory 2.0Gi \
+            --min-replicas 1 \
+            --max-replicas 5
+
+      - name: Configure Frontend Compute & Scaling
+        run: |
+          az containerapp update \
+            --name aitutor-frontend-app \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+            --cpu 0.5 \
+            --memory 1.0Gi \
+            --min-replicas 1 \
+            --max-replicas 5
