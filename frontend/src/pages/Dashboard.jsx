@@ -89,7 +89,7 @@ export const Dashboard = () => {
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 h-full w-20 md:w-64 bg-dark-900/50 backdrop-blur-xl border-r border-dark-800 z-50 transition-all duration-300">
         <div className="h-20 flex items-center px-6 border-b border-dark-800">
-           <BrainCircuit className="w-8 h-8 text-gold-500" />
+           <img src="/logo.png" alt="AI Tutor Logo" className="w-10 h-10 rounded-xl object-contain bg-dark-800" />
            <span className="ml-3 font-bold text-xl hidden md:block tracking-tight">AI<span className="text-gold-500">Tutor</span></span>
         </div>
 {/*         

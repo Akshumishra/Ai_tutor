@@ -243,35 +243,25 @@ docker run -p 80:80 aitutor-frontend
 
 ### Backend (`backend/.env`)
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `OPENAI_API_KEY` | ✅ | — | OpenAI API key for all LLM agents |
-| `DATABASE_URL` | ✅ | — | PostgreSQL connection string |
-| `REDIS_URL` | ✅ | `redis://localhost:6379/0` | Redis for OTP caching |
-| `TAVILY_API_KEY` | ✅ | — | Tavily search API for deep research |
-| `GOOGLE_CLIENT_ID` | ✅ | — | Google OAuth 2.0 client ID |
-| `GOOGLE_CLIENT_SECRET` | ✅ | — | Google OAuth 2.0 client secret |
-| `SMTP_SERVER` | ⚠️ | `smtp.gmail.com` | SMTP host for sending OTP emails |
-| `SMTP_PORT` | ⚠️ | `587` | SMTP port |
-| `SMTP_USERNAME` | ⚠️ | — | Email address for sending OTPs |
-| `SMTP_PASSWORD` | ⚠️ | — | App password (Gmail: generate in Account settings) |
-| `EMAILS_FROM` | ⚠️ | `no-reply@aitutor.com` | Sender display address |
-| `OTP_EXPIRY_SECONDS` | ❌ | `600` | OTP validity window (10 min) |
-| `OTP_LOCK_SECONDS` | ❌ | `60` | Cooldown between OTP requests |
-| `LOG_LEVEL` | ❌ | `INFO` | Logging verbosity |
-| `ALLOWED_ORIGINS` | ❌ | localhost ports | Comma-separated CORS origins |
-| `ENABLE_QUERY_EXPANSION` | ❌ | — | Enable Tavily query expansion |
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | OpenAI API key for all LLM agents |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `REDIS_URL` | Redis for OTP caching |
+| `TAVILY_API_KEY` | Tavily search API for deep research |
+| `GOOGLE_CLIENT_ID` | Google OAuth 2.0 client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 client secret |
 
 ### Frontend (`frontend/.env`)
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_API_URL` | ✅ | Backend API base URL |
-| `VITE_GOOGLE_CLIENT_ID` | ✅ | Google OAuth client ID (same as backend) |
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Backend API base URL |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID (same as backend) |
 
 ---
 
-## 📡 API Reference
+## API Reference
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -302,7 +292,7 @@ Full interactive API docs: `http://localhost:8000/docs`
 
 ---
 
-## 🗄 Database Schema (Overview)
+## Database Schema (Overview)
 
 ```
 users

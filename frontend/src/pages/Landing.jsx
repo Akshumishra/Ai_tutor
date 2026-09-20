@@ -10,10 +10,8 @@ export const Landing = () => {
       <div className="absolute top-[-20%] left-[10%] w-[50%] h-[50%] rounded-full bg-gold-600/10 blur-[120px] pointer-events-none" />
       
       <nav className="border-b border-dark-700/50 p-6 flex justify-between items-center relative z-10">
-        <div className="flex items-center gap-2">
-          <div className="bg-gold-500 p-2 rounded-xl">
-            <BrainCircuit className="w-6 h-6 text-dark-900" />
-          </div>
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="AI Tutor Logo" className="w-10 h-10 rounded-xl object-contain bg-dark-800" />
           <span className="text-2xl font-bold text-white">AI<span className="text-gold-500">Tutor</span></span>
         </div>
         <div className="flex gap-4">
