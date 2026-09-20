@@ -153,9 +153,7 @@ export const Auth = ({ type = 'login' }) => {
       
       <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
         <Link to="/" className="flex justify-center items-center gap-2 mb-6">
-          <div className="bg-gold-500 p-2 rounded-xl">
-            <BrainCircuit className="w-8 h-8 text-dark-900" />
-          </div>
+          <img src="/logo.png" alt="AI Tutor Logo" className="w-12 h-12 rounded-xl object-contain bg-dark-800" />
         </Link>
         <h2 className="mt-2 text-center text-3xl font-extrabold text-white">
           {isLogin ? 'Welcome back' : step === 0 ? 'Create an account' : step === 1 ? 'Verify Email' : 'Set Password'}
