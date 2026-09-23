@@ -1,0 +1,64 @@
+import logging
+from uuid import UUID
+
+from src.backend.models.topic import Topic
+from src.backend.db.database import SessionLocal
+from src.llm.agent_core.args_schema import ArgsSchema as Args
+from src.llm.agent_core.tool import Tool
+from src.backend.enums.status import Status
+from src.backend.models.workflow_status import WorkflowStatus
+from src.backend.enums.workflow_stage import WorkflowStage
+
+logger = logging.getLogger(__name__)
+
+class FinalizeCurriculumArgs:
+    args = [
+        ("topic_id", Args(type=str, description="The UUID of the topic to finalize")),
+        ("confirmation", Args(type=bool, description="Set to true to confirm finalization")),
+    ]
+
+def make_finalize_curriculum_tool(topic_id_fixed: str):
+    def finalize_curriculum_tool(topic_id: str, confirmation: bool):
+        if not confirmation:
+            return {"status": "error", "message": "Finalization not confirmed."}
+        
+        db = SessionLocal()
+        try:
+            topic_uuid = None
+            try:
+                topic_uuid = UUID(topic_id_fixed)
+            except (ValueError, TypeError):
+                return {"status": "error", "message": "Topic not found or invalid ID."}
+            
+            if not topic_uuid:
+                 return {"status": "error", "message": "Topic not found or invalid ID."}
+
+            topic = db.query(Topic).filter(Topic.id == topic_uuid).first()
+            if not topic:
+                return {"status": "error", "message": "Topic not found."}
+            
+            topic.status = Status.COMPLETED.value
+            
+            ws = db.query(WorkflowStatus).filter(
+                WorkflowStatus.topic_id == topic_uuid,
+                WorkflowStatus.stage == WorkflowStage.CURRICULUM
+            ).first()
+            if not ws:
+                ws = WorkflowStatus(topic_id=topic_uuid, stage=WorkflowStage.CURRICULUM)
+                db.add(ws)
+            ws.status = Status.COMPLETED
+            
+            db.commit()
+            logger.info(f"Curriculum finalized for topic {topic_id}. Workflow status updated to COMPLETED.")
+            return {"status": "success", "message": "Curriculum finalized! Happy learning journey! You can now proceed to the Planning stage."}
+        except Exception as e:
+            db.rollback()
+            return {"status": "error", "reason": str(e)}
+        finally:
+            db.close()
+
+    return Tool(
+        func=finalize_curriculum_tool,
+        description="Finalize the curriculum generation process. Call this ONLY when the user approves the curriculum structure.",
+        args_schema=FinalizeCurriculumArgs,
+    )
