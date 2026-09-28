@@ -1,0 +1,88 @@
+/* ── AI Tutor — MkDocs Extra Styles ── */
+
+:root {
+  --md-primary-fg-color: #7c3aed;
+  --md-accent-fg-color:  #06b6d4;
+}
+
+/* Hero gradient banner on home page */
+.hero-banner {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #0e7490 100%);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.hero-banner h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
+
+.hero-banner p {
+  font-size: 1.15rem;
+  opacity: 0.85;
+  margin: 0;
+}
+
+/* Badge row */
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+/* Pill cards for feature lists */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.feature-card {
+  background: var(--md-code-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 10px;
+  padding: 1.2rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(124,58,237,0.2);
+}
+
+.feature-card .icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Mermaid diagrams — center & cap width */
+.mermaid {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+/* Code annotations */
+.md-annotation__index {
+  background-color: var(--md-primary-fg-color);
+}
+
+/* Admonition colour overrides */
+.md-typeset .admonition.agent,
+.md-typeset details.agent {
+  border-color: #7c3aed;
+}
+.md-typeset .agent > .admonition-title,
+.md-typeset .agent > summary {
+  background-color: rgba(124,58,237,0.1);
+  border-color: #7c3aed;
+}
